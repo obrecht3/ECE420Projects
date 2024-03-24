@@ -1,0 +1,3 @@
+C:/Users/joels/OneDrive/Documents/Code/ECE 420/Lab5/Lab5/app/.cxx/Debug/8r2s2p4x/arm64-v8a/CMakeFiles/echo.dir
+C:/Users/joels/OneDrive/Documents/Code/ECE 420/Lab5/Lab5/app/.cxx/Debug/8r2s2p4x/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/joels/OneDrive/Documents/Code/ECE 420/Lab5/Lab5/app/.cxx/Debug/8r2s2p4x/arm64-v8a/CMakeFiles/rebuild_cache.dir
