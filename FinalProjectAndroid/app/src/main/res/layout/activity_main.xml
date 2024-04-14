@@ -13,53 +13,24 @@
         android:id="@+id/capture_control_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/newFreqStatusText"
+        android:layout_below="@id/notesInput"
         android:layout_centerInParent="true"
         android:layout_marginTop="5dp"
         android:onClick="onEchoClick"
         android:text="@string/StartEcho" />
 
+    <EditText
+        android:id="@+id/notesInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/notesInputRepeated"
+        android:ems="10"
+        android:inputType="text" />
+
     <TextView
-        android:id="@+id/newFreqStatusText"
+        android:id="@+id/notesInputRepeated"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/freqSeekBar"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:text="Desired Output Frequency:"
-        android:textAppearance="@android:style/TextAppearance.Material.Large" />
-
-    <SeekBar
-        android:id="@+id/freqSeekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="44dp"
-        android:max="849" />
-
-    <ImageView
-        android:id="@+id/stftView"
-        android:layout_width="match_parent"
-        android:layout_height="700dp"
-        android:layout_below="@id/capture_control_button"
-        android:layout_alignParentBottom="true"
-        android:layout_centerInParent="false"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="50dp"
-        android:scaleType="fitXY"
-        app:srcCompat="@android:color/holo_blue_light" />
-
-    <Switch
-        android:id="@+id/switch_TDPSOLA"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/capture_control_button"
-        android:layout_marginLeft="60dp"
-        android:layout_toRightOf="@id/capture_control_button"
-        android:text="TDPSOLA" />
+        android:layout_height="wrap_content" />
 
 </RelativeLayout>
 

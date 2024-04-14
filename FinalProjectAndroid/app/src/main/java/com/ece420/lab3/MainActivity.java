@@ -39,6 +39,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -50,6 +51,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.IntStream;
 
 
 public class MainActivity extends Activity
@@ -57,8 +59,9 @@ public class MainActivity extends Activity
 
     // UI Variables
     Button controlButton;
-    TextView freq_status_view;
-    Switch simpleSwitch;
+
+    TextView notesInputRepeated;
+    EditText notesInput;
 
     String  nativeSampleRate;
     String  nativeSampleBufSize;
@@ -84,6 +87,8 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
         super.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+
+
         // Google NDK Stuff
         controlButton = (Button)findViewById((R.id.capture_control_button));
 
@@ -95,49 +100,63 @@ public class MainActivity extends Activity
             createSLEngine(Integer.parseInt(nativeSampleRate), FRAME_SIZE);
         }
 
-        // setup switch
-        simpleSwitch = (Switch) findViewById(R.id.switch_TDPSOLA);
-        simpleSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                boolean switchState = simpleSwitch.isChecked();
+        // set up notesInputRepeated
+        notesInputRepeated = (TextView) findViewById(R.id.notesInputRepeated);
+        notesInputRepeated.setText("...waiting");
 
-                writeNewSwitch(switchState);
+        // set up notesInput
+        notesInput = (EditText) findViewById(R.id.notesInput);
+        notesInput.addTextChangedListener(new android.text.TextWatcher() {
+            public void afterTextChanged(android.text.Editable s) {
+                CharSequence currText = s.chars().toString();
+                notesInputRepeated.setText(currText);
             }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
-
-        // check current state of a Switch (true or false).
-
-
-        // Setup UI
-        freq_status_view = (TextView) findViewById(R.id.newFreqStatusText);
-        freq_status_view.setText("Desired Output Frequency: 420 Hz");
-        // Setup Seekbar and Initialize
-        SeekBar mSeekbar = (SeekBar) findViewById(R.id.freqSeekBar);
-        mSeekbar.setProgress(420);
-        writeNewFreq(420);
-        mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
-        {
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
-            {
-                int newFreq = progress + MIN_FREQ;
-                freq_status_view.setText("Desired Output Frequency: " + Integer.toString(newFreq) + " Hz");
-                writeNewFreq(newFreq);
-            }
-
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-        // UI Variables and Setup
-        stftView = (ImageView) this.findViewById(R.id.stftView);
-        bitmap =  Bitmap.createBitmap((FRAME_SIZE), BITMAP_HEIGHT, Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
-        canvas.drawColor(Color.BLACK);
-        paint = new Paint();
-        paint.setColor(Color.GREEN);
-        paint.setStyle(Paint.Style.FILL);
-        stftView.setImageBitmap(bitmap);
-        initializeStftBackgroundThread(10);
+//        // setup switch
+//        simpleSwitch = (Switch) findViewById(R.id.switch_TDPSOLA);
+//        simpleSwitch.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                boolean switchState = simpleSwitch.isChecked();
+//
+//                writeNewSwitch(switchState);
+//            }
+//        });
+//
+//        // check current state of a Switch (true or false).
+//
+//
+//        // Setup UI
+//        freq_status_view = (TextView) findViewById(R.id.newFreqStatusText);
+//        freq_status_view.setText("Desired Output Frequency: 420 Hz");
+//        // Setup Seekbar and Initialize
+//        SeekBar mSeekbar = (SeekBar) findViewById(R.id.freqSeekBar);
+//        mSeekbar.setProgress(420);
+//        writeNewFreq(420);
+//        mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+//        {
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+//            {
+//                int newFreq = progress + MIN_FREQ;
+//                freq_status_view.setText("Desired Output Frequency: " + Integer.toString(newFreq) + " Hz");
+//                writeNewFreq(newFreq);
+//            }
+//
+//            public void onStartTrackingTouch(SeekBar seekBar) {}
+//            public void onStopTrackingTouch(SeekBar seekBar) {}
+//        });
+//        // UI Variables and Setup
+//        stftView = (ImageView) this.findViewById(R.id.stftView);
+//        bitmap =  Bitmap.createBitmap((FRAME_SIZE), BITMAP_HEIGHT, Bitmap.Config.ARGB_8888);
+//        canvas = new Canvas(bitmap);
+//        canvas.drawColor(Color.BLACK);
+//        paint = new Paint();
+//        paint.setColor(Color.GREEN);
+//        paint.setStyle(Paint.Style.FILL);
+//        stftView.setImageBitmap(bitmap);
+//        initializeStftBackgroundThread(10);
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
