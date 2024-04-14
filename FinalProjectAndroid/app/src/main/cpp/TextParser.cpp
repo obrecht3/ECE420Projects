@@ -9,14 +9,15 @@ TextParser::~TextParser() {}
 
 std::vector<Pitch> TextParser::parse(std::string input) {
     const size_t numNotes = input.size();
-    std::vector<Pitch> sequence(numNotes);
+    std::vector<Pitch> sequence;
+    sequence.reserve(numNotes);
 
     for (char c : input) {
-        if (c == 'x') {
+        if (c == 'x' || c == 'X') {
             sequence.push_back(-1);
         } else {
             const int num = static_cast<int>(c) - static_cast<int>('0');
-            if (num < 1 || num > 8) {
+            if (num >= 1 && num <= 8) {
                 sequence.push_back(num);
             } else {
                 // ERROR
