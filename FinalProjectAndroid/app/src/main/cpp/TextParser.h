@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 
-typedef int Pitch; // 1 - 8 for corresponding note in a major scale, -1 for rest
+// 1 - 8 for corresponding note in a major scale, -1 for rest
+// Converted to semitones where 0 is root and 12 is an octave up
+typedef int Pitch;
 
 class TextParser {
 public:
