@@ -1,2 +1,0 @@
-C:\Users\joels\OneDrive\Documents\Code\ECE 420\Lab5\Lab5\app\src\main\cpp\CMakeLists.txt
-C:\Users\joels\OneDrive\Documents\Code\ECE 420\Lab5\Lab5\app\src\main\cpp\ndk-stl-config.cmake

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -stdlib=libc++ -Wall -Werror")
 
 add_library(echo SHARED
             audio_common.cpp
@@ -10,7 +10,8 @@ add_library(echo SHARED
             debug_utils.cpp
             kiss_fft/kiss_fft.c
             ece420_lib.cpp
-            ece420_main.cpp)
+            ece420_main.cpp
+            TextParser.cpp)
 
 # include libraries needed for hello-jni lib
 target_link_libraries(echo

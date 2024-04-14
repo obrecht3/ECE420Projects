@@ -7,6 +7,7 @@
 #include "ece420_main.h"
 #include "ece420_lib.h"
 #include "kiss_fft/kiss_fft.h"
+#include "TextParser.h"
 
 // Declare JNI function
 extern "C" {
@@ -53,6 +54,8 @@ bool isWritingFft = false;
 kiss_fft_cfg kfftCfg = kiss_fft_alloc(FFT_SIZE, false, NULL,NULL);
 kiss_fft_cpx kfftIn[FFT_SIZE] = {};
 kiss_fft_cpx kfftOut[FFT_SIZE] = {};
+
+TextParser parser;
 
 void processFFT(float* in, float* out) {
     // 1. Apply hamming window to the entire FRAME_SIZE
