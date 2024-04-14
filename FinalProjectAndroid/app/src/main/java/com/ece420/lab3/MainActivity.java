@@ -34,10 +34,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -62,6 +64,7 @@ public class MainActivity extends Activity
 
     TextView notesInputRepeated;
     EditText notesInput;
+    Button submitButton;
 
     String  nativeSampleRate;
     String  nativeSampleBufSize;
@@ -106,57 +109,26 @@ public class MainActivity extends Activity
 
         // set up notesInput
         notesInput = (EditText) findViewById(R.id.notesInput);
-        notesInput.addTextChangedListener(new android.text.TextWatcher() {
-            public void afterTextChanged(android.text.Editable s) {
-                CharSequence currText = s.chars().toString();
-                notesInputRepeated.setText(currText);
+        notesInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent keyEvent) {
+                boolean handled = false;
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO) {
+                    handleTextInput();
+                    handled = true;
+                }
+                return handled;
             }
-            public void beforeTextChanged(CharSequence s, int start, int count, int after){}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
-//        // setup switch
-//        simpleSwitch = (Switch) findViewById(R.id.switch_TDPSOLA);
-//        simpleSwitch.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                boolean switchState = simpleSwitch.isChecked();
-//
-//                writeNewSwitch(switchState);
-//            }
-//        });
-//
-//        // check current state of a Switch (true or false).
-//
-//
-//        // Setup UI
-//        freq_status_view = (TextView) findViewById(R.id.newFreqStatusText);
-//        freq_status_view.setText("Desired Output Frequency: 420 Hz");
-//        // Setup Seekbar and Initialize
-//        SeekBar mSeekbar = (SeekBar) findViewById(R.id.freqSeekBar);
-//        mSeekbar.setProgress(420);
-//        writeNewFreq(420);
-//        mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
-//        {
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
-//            {
-//                int newFreq = progress + MIN_FREQ;
-//                freq_status_view.setText("Desired Output Frequency: " + Integer.toString(newFreq) + " Hz");
-//                writeNewFreq(newFreq);
-//            }
-//
-//            public void onStartTrackingTouch(SeekBar seekBar) {}
-//            public void onStopTrackingTouch(SeekBar seekBar) {}
-//        });
-//        // UI Variables and Setup
-//        stftView = (ImageView) this.findViewById(R.id.stftView);
-//        bitmap =  Bitmap.createBitmap((FRAME_SIZE), BITMAP_HEIGHT, Bitmap.Config.ARGB_8888);
-//        canvas = new Canvas(bitmap);
-//        canvas.drawColor(Color.BLACK);
-//        paint = new Paint();
-//        paint.setColor(Color.GREEN);
-//        paint.setStyle(Paint.Style.FILL);
-//        stftView.setImageBitmap(bitmap);
-//        initializeStftBackgroundThread(10);
+
+        // set up submitButton
+        submitButton = (Button) findViewById(R.id.submitButton);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handleTextInput();
+            }
+        });
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -202,6 +174,22 @@ public class MainActivity extends Activity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void handleTextInput() {
+        String sequence = notesInput.getText().toString();
+
+        // check for valid input
+        String validChars = "12345678xX";
+        for (char c : sequence.toCharArray()) {
+            if (validChars.indexOf(c) < 0) {
+                notesInputRepeated.setText("ERROR: Input Must Only Contain 1-8 or x");
+                return;
+            }
+        }
+
+        notesInputRepeated.setText("Submitted!");
+        getNotesInput(sequence);
     }
 
     private void startEcho() {
@@ -414,7 +402,7 @@ public class MainActivity extends Activity
     public static native void stopPlay();
 
     public static native void getFftBuffer(FloatBuffer buffer);
-    public static native void writeNewFreq(int freq);
-    public static native void writeNewSwitch(boolean state);
+
+    public static native void getNotesInput(String input);
 
 }

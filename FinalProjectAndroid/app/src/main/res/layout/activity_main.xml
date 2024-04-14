@@ -13,7 +13,7 @@
         android:id="@+id/capture_control_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/notesInput"
+        android:layout_below="@id/notesInputRepeated"
         android:layout_centerInParent="true"
         android:layout_marginTop="5dp"
         android:onClick="onEchoClick"
@@ -23,14 +23,21 @@
         android:id="@+id/notesInput"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/notesInputRepeated"
         android:ems="10"
         android:inputType="text" />
 
     <TextView
         android:id="@+id/notesInputRepeated"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_below="@id/notesInput"  />
+
+    <Button
+        android:id="@+id/submitButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:layout_toRightOf="@id/notesInput" />
 
 </RelativeLayout>
 

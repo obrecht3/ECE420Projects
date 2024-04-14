@@ -356,3 +356,10 @@ Java_com_ece420_lab3_MainActivity_writeNewSwitch(JNIEnv *env, jclass, jint newSt
 IS_TDPSOLA_ANDROID = (bool) newState;
 return;
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input) {
+    // TODO: implement getNotesInput()
+    // parser.parse(input)
+}
