@@ -25,6 +25,10 @@ extern "C" {
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewSwitch(JNIEnv *env, jclass, jint);
 }
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint);
+}
 
 // Student Variables
 #define EPOCH_PEAK_REGION_WIGGLE 30
