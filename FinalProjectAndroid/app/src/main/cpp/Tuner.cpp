@@ -4,51 +4,80 @@
 
 #include "Tuner.h"
 #include "kiss_fft/kiss_fft.h"
+#include <math.h>
 
 Tuner::Tuner(int _frameSize, int _sampleRate)
     : bufferSize{3 * _frameSize}
     , frameSize{_frameSize}
     , sampleRate{_sampleRate}
     , newEpochIdx{frameSize}
+    , currPitchEvent{0, 0}
     , bufferIn(bufferSize, 0)
-    , bufferOut(bufferSize, 0) {
+    , bufferOut(bufferSize, 0){
 }
 
 Tuner::~Tuner() {
 
 }
 
-bool Tuner::pitchShift(float targetFreq) {
+void Tuner::processBlock(int16_t *data, std::vector<PitchEvent> pitchEvents) {
+    // Shift our old data back to make room for the new data
+    for (int i = 0; i < 2 * frameSize; i++) {
+        bufferIn[i] = bufferIn[i + frameSize - 1];
+    }
+
+    // Finally, put in our new data.
+    for (int i = 0; i < frameSize; i++) {
+        bufferIn[i + 2 * frameSize - 1] = (float) data[i];
+    }
+
+    // The whole kit and kaboodle -- pitch shift
+    bool isVoiced = pitchShift(pitchEvents);
+
+    if (isVoiced) {
+        for (int i = 0; i < frameSize; i++) {
+            data[i] = (int16_t) bufferOut[i];
+        }
+    }
+
+    // Very last thing, update your output circular buffer!
+    for (int i = 0; i < 2 * frameSize; i++) {
+        bufferOut[i] = bufferOut[i + frameSize - 1];
+    }
+
+    for (int i = 0; i < frameSize; i++) {
+        bufferOut[i + 2 * frameSize - 1] = 0;
+    }
+}
+
+bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents) {
     // Lab 4 code is condensed into this function
     int periodLen = detectBufferPeriod(bufferIn.data());
 
     // If voiced
     if (periodLen > 0) {
-
-//        LOGD("Frequency detected: %f\r\n", freq);
-
-        // Epoch detection - this code is written for you, but the principles will be quizzed
         std::vector<int> epochLocations;
         findEpochLocations(epochLocations, bufferIn.data(), periodLen);
 
-        // In this section, you will implement the algorithm given in:
-        // https://courses.engr.illinois.edu/ece420/lab5/lab/#buffer-manipulation-algorithm
-        //
-        // Don't forget about the following functions! API given on the course page.
-        //
-        // getHanningCoef();
-        // findClosestInVector();
-        // overlapAndAdd();
-        // *********************** START YOUR CODE HERE  **************************** //
         int closestIdx = 1;
         const int P0 = periodLen;
-        const int P1 = static_cast<int>(static_cast<float>(sampleRate) / targetFreq);
         const int l = 2 * P0 + 1;
         float hWindowed[l];
+
+        int pitchEventIdx = 0;
+        int P1 = 1;
+        if (currPitchEvent.frequency > 0) {
+            P1 = static_cast<int>(static_cast<float>(sampleRate) / currPitchEvent.frequency);
+        }
 
         while (newEpochIdx < 2 * frameSize) {
             // Find the closest epoch in the original signal
             closestIdx = findClosestInVector(epochLocations, newEpochIdx, closestIdx - 1, epochLocations.size() - 2);
+            const int nextPitchEventIdx = setCurrPitchEvent(pitchEventIdx, newEpochIdx - frameSize, pitchEvents);
+            if (nextPitchEventIdx >= 0) {
+                pitchEventIdx = nextPitchEventIdx;
+                P1 = static_cast<int>(static_cast<float>(sampleRate) / currPitchEvent.frequency);
+            }
 
             // apply Hanning window
             for(int i = 0; i < l; i++) {
@@ -195,32 +224,13 @@ void Tuner::overlapAddArray(float *dest, float *src, int startIdx, int len) {
     }
 }
 
-void Tuner::processBlock(int16_t *data) {
-    // Shift our old data back to make room for the new data
-    for (int i = 0; i < 2 * frameSize; i++) {
-        bufferIn[i] = bufferIn[i + frameSize - 1];
-    }
-
-    // Finally, put in our new data.
-    for (int i = 0; i < frameSize; i++) {
-        bufferIn[i + 2 * frameSize - 1] = (float) data[i];
-    }
-
-    // The whole kit and kaboodle -- pitch shift
-    bool isVoiced = pitchShift(440);
-    
-    if (isVoiced) {
-        for (int i = 0; i < frameSize; i++) {
-            data[i] = (int16_t) bufferOut[i];
+int Tuner::setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent>& events) {
+    for (int i = startIdx; i < events.size(); ++i) {
+        if (std::abs(static_cast<int>(events[i].position - bufferPos)) < std::abs(static_cast<int>(bufferPos - currPitchEvent.position))) {
+            currPitchEvent = events[i];
+            return i;
         }
     }
 
-    // Very last thing, update your output circular buffer!
-    for (int i = 0; i < 2 * frameSize; i++) {
-        bufferOut[i] = bufferOut[i + frameSize - 1];
-    }
-
-    for (int i = 0; i < frameSize; i++) {
-        bufferOut[i + 2 * frameSize - 1] = 0;
-    }
+    return -1;
 }

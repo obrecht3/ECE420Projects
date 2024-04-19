@@ -84,7 +84,7 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     }
 
     // PROCESS HERE
-    tuner.processBlock(data);
+    tuner.processBlock(data, {{0, 440.0}, {FRAME_SIZE / 2, 450.0}});
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         uint8_t lowByte = (uint8_t) (0x00ff & data[i]);
