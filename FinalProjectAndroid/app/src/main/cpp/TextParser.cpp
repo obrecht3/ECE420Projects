@@ -63,6 +63,8 @@ void TextParser::parse(std::string input) {
 }
 
 void TextParser::calcPitchEvents(float userFreq) {
+    if (bufferOffset >= bufferSize) return;
+
     const int n = getNearestNote(userFreq);
     prevUserFreq = userFreq;
 
@@ -79,6 +81,8 @@ void TextParser::calcPitchEvents(float userFreq) {
             events.emplace_back(pos, 0.0);
         } else {
             events.emplace_back(pos, 440.0 * pow(2.0, static_cast<double>(n + p) / 12.0));
+            events.emplace_back(pos + samplesPerNote * 0.8f, 0.0);
+
         }
         pos += samplesPerNote;
     }

@@ -99,10 +99,10 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 //    noteDetector.detect(data);
     tuner.writeInputSamples(data);
     const int period = tuner.detectBufferPeriod();
-    parser.calcPitchEvents(220.0f);
+//    parser.calcPitchEvents(220.0f);
 //    if (noteDetector.startPlaying()) {
-//        const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
-//        parser.calcPitchEvents(userFreq);
+    const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
+    parser.calcPitchEvents(userFreq);
 //    }
 
     std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
