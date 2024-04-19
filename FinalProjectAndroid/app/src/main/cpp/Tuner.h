@@ -11,15 +11,17 @@ public:
     Tuner(int _frameSize, int _sampleRate);
     ~Tuner();
 
-    void processBlock(int16_t *data, std::vector<PitchEvent> pitchEvents);
+    // should execute writeInputSamples THEN detectBufferPeriod THEN processBlock to compute full TD-PSOLA
+    void writeInputSamples(float *data);
+    int detectBufferPeriod(); // this is separate to eventually cut down on computation for multiple melodies
+    void processBlock(float *data, std::vector<PitchEvent> pitchEvents, int periodLen);
 
 private:
-    bool pitchShift(std::vector<PitchEvent> pitchEvents);
-    int detectBufferPeriod(float *buffer);
+    bool pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen);
     void findEpochLocations(std::vector<int> &epochLocations, float *buffer, int periodLen);
     void overlapAddArray(float *dest, float *src, int startIdx, int len);
 
-    int setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent>& events);
+    int setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent> events);
 
 private:
     int bufferSize;

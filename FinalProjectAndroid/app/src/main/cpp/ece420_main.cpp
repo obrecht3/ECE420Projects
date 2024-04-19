@@ -9,6 +9,7 @@
 #include "kiss_fft/kiss_fft.h"
 #include "TextParser.h"
 #include "Tuner.h"
+#include "NoteDetector.h"
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -51,6 +52,7 @@ kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
 TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
+NoteDetector noteDetector(FRAME_SIZE);
 
 void processFFT(float* in, float* out) {
     // 1. Apply hamming window to the entire FRAME_SIZE
@@ -87,17 +89,32 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 
     // Data is encoded in signed PCM-16, little-endian, mono
-    int16_t data[FRAME_SIZE];
+    float data[FRAME_SIZE];
     for (int i = 0; i < FRAME_SIZE; i++) {
-        data[i] = ((uint16_t) dataBuf->buf_[2 * i]) | (((uint16_t) dataBuf->buf_[2 * i + 1]) << 8);
+        const int16_t value = ((uint16_t) dataBuf->buf_[2 * i]) | (((uint16_t) dataBuf->buf_[2 * i + 1]) << 8);
+        data[i] = value;
     }
 
     // PROCESS HERE
-    tuner.processBlock(data, {{0, 440.0}, {FRAME_SIZE / 2, 450.0}});
+    noteDetector.detect(data);
+    tuner.writeInputSamples(data);
+    const int period = tuner.detectBufferPeriod();
+
+    if (noteDetector.startPlaying()) {
+        const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
+        parser.calcPitchEvents(userFreq);
+    }
+
+    std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
+    tuner.processBlock(data, pitchEvents, period);
+//    if (parser.melodyDone()) {
+//        noteDetector.reset();
+//    }
 
     for (int i = 0; i < FRAME_SIZE; i++) {
-        uint8_t lowByte = (uint8_t) (0x00ff & data[i]);
-        uint8_t highByte = (uint8_t) ((0xff00 & data[i]) >> 8);
+        const int16_t value = data[i];
+        uint8_t lowByte = (uint8_t) (0x00ff & value);
+        uint8_t highByte = (uint8_t) ((0xff00 & value) >> 8);
         dataBuf->buf_[i * 2] = lowByte;
         dataBuf->buf_[i * 2 + 1] = highByte;
     }
@@ -108,13 +125,15 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint) {
-
+Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTempo) {
+    parser.setTempo(newTempo);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input) {
-    // TODO: implement getNotesInput()
-    // parser.parse(input)
+    const char *cstr = env->GetStringUTFChars(input, NULL);
+    std::string str = std::string(cstr);
+    env->ReleaseStringUTFChars(input, cstr);
+    parser.parse(str);
 }

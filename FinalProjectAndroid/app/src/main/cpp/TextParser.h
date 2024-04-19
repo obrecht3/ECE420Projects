@@ -21,19 +21,27 @@ public:
     ~TextParser();
 
     void parse(std::string input);
-    void calcPitchEvents(float tempo, float userFreq);
+    void calcPitchEvents(float userFreq);
     std::vector<PitchEvent> getPitchEventsForNextBuffer();
+
+    void setTempo(float _tempo) {
+        tempo = _tempo;
+        calcPitchEvents(prevUserFreq);
+    }
+
+    bool melodyDone();
 
 private:
     int getNearestNote(float freq) const;
 
 private:
+    std::string prevInput;
     int bufferSize;
     int sampleRate;
-//    double samplesPerNote;
+    float tempo;
+    float prevUserFreq;
 
     unsigned long bufferOffset;
-//    double playPosition;
 
     std::vector<Pitch> pitches;
     std::vector<PitchEvent> events;

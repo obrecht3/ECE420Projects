@@ -7,10 +7,17 @@
 TextParser::TextParser(int _bufferSize, int _sampleRate)
     : bufferSize{_bufferSize}
     , sampleRate{_sampleRate}
+    , prevUserFreq{0.0f}
     , bufferOffset{0ul} {}
 TextParser::~TextParser() {}
 
 void TextParser::parse(std::string input) {
+    if (prevInput == input) {
+        return;
+    }
+
+    bufferOffset = 0ul;
+
     if (!pitches.empty()) {
         pitches.clear();
     }
@@ -55,8 +62,9 @@ void TextParser::parse(std::string input) {
     }
 }
 
-void TextParser::calcPitchEvents(float tempo, float userFreq) {
+void TextParser::calcPitchEvents(float userFreq) {
     const int n = getNearestNote(userFreq);
+    prevUserFreq = userFreq;
 
     if (!events.empty()) {
         events.clear();
@@ -67,7 +75,11 @@ void TextParser::calcPitchEvents(float tempo, float userFreq) {
 
     double pos = 0;
     for (Pitch p : pitches) {
-        events.emplace_back(pos, 440.0 * pow(2.0, static_cast<double>(n + p) / 12.0));
+        if (p < 0) {
+            events.emplace_back(pos, 0.0);
+        } else {
+            events.emplace_back(pos, 440.0 * pow(2.0, static_cast<double>(n + p) / 12.0));
+        }
         pos += samplesPerNote;
     }
 }
@@ -88,5 +100,12 @@ std::vector<PitchEvent> TextParser::getPitchEventsForNextBuffer() {
     }
 
     bufferOffset = nextBufferPos;
+    melodyDone();
     return bufferEvents;
+}
+
+bool TextParser::melodyDone() {
+    bool done = events.size() == 0 || (bufferOffset + bufferSize > events[events.size() - 1].position);
+    if (done) bufferOffset = 0ul;
+    return done;
 }
