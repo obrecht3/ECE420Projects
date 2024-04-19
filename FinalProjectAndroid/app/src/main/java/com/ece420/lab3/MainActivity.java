@@ -141,7 +141,7 @@ public class MainActivity extends Activity
         frequencySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                int newTempo = 40 + i;        // 40 is the minimum tempo in BPM
+                int newTempo = (int)(40.0f + 2.405f * (float)i);        // BPM From 40 to 280
                 tempo_TextView.setText("Tempo: " + Integer.toString(newTempo) + " BPM");
                 writeNewTempo(newTempo);
             }
