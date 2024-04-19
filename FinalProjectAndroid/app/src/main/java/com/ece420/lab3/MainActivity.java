@@ -292,94 +292,6 @@ public class MainActivity extends Activity
         startEcho();
     }
 
-    // All this does is calls the UpdateStftTask at a fixed interval
-    // http://stackoverflow.com/questions/6531950/how-to-execute-async-task-repeatedly-after-fixed-time-intervals
-    public void initializeStftBackgroundThread(int timeInMs) {
-        final Handler handler = new Handler();
-        Timer timer = new Timer();
-        TimerTask doAsynchronousTask = new TimerTask() {
-            @Override
-            public void run() {
-                handler.post(new Runnable() {
-                    public void run() {
-                        try {
-                            UpdateStftTask performStftUiUpdate = new UpdateStftTask();
-                            performStftUiUpdate.execute();
-                        } catch (Exception e) {
-                            // TODO Auto-generated catch block
-                        }
-                    }
-                });
-            }
-        };
-        timer.schedule(doAsynchronousTask, 0, timeInMs); // execute every 10 ms
-    }
-
-    // UI update
-    private class UpdateStftTask extends AsyncTask<Void, FloatBuffer, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            // Float == 4 bytes
-            // Note: We're using FloatBuffer instead of float array because interfacing with JNI
-            // with a FloatBuffer allows direct memory sharing, versus having to copy to some
-            // intermediate location first.
-            // http://stackoverflow.com/questions/10697161/why-floatbuffer-instead-of-float
-            FloatBuffer buffer = ByteBuffer.allocateDirect(FRAME_SIZE * 4)
-                    .order(ByteOrder.LITTLE_ENDIAN)
-                    .asFloatBuffer();
-
-            getFftBuffer(buffer);
-
-            // Update screen, needs to be done on UI thread
-            publishProgress(buffer);
-
-            return null;
-        }
-
-        protected void onProgressUpdate(FloatBuffer... newDisplayUpdate) {
-            int r,g,b;
-
-            // emulates a scrolling window
-            Rect srcRect = new Rect(0, -(-1), bitmap.getWidth(), bitmap.getHeight());
-            Rect destRect = new Rect(srcRect);
-            destRect.offset(0, -1);
-            canvas.drawBitmap(bitmap, srcRect, destRect, null);
-
-            // update latest column with new values which need to be between 0.0 and 1.0
-            for(int i=0;i < newDisplayUpdate[0].capacity();i++) {
-                double val = newDisplayUpdate[0].get();
-
-                // simple linear RYGCB colormap
-                if(val <= 0.25) {
-                    r = 0;
-                    b = 255;
-                    g = (int)(4*val*255);
-                } else if(val <= 0.5) {
-                    r = 0;
-                    g = 255;
-                    b = (int)((1-4*(val-0.25))*255);
-                } else if(val <= 0.75) {
-                    g = 255;
-                    b = 0;
-                    r = (int)(4*(val-0.5)*255);
-                } else {
-                    r = 255;
-                    b = 0;
-                    g = (int)((1-4*(val-0.75))*255);
-                }
-
-                // set color with constant alpha
-                paint.setColor(Color.argb(255, r, g, b));
-                // paint corresponding area
-                canvas.drawRect(i, BITMAP_HEIGHT-1, i+1, BITMAP_HEIGHT, paint);
-            }
-
-            newDisplayUpdate[0].rewind();
-            stftView.invalidate();
-        }
-    }
-
     /*
      * Loading our Libs
      */
@@ -400,9 +312,6 @@ public class MainActivity extends Activity
     public static native void deleteAudioRecorder();
     public static native void startPlay();
     public static native void stopPlay();
-
-    public static native void getFftBuffer(FloatBuffer buffer);
-
     public static native void getNotesInput(String input);
 
 }

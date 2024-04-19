@@ -11,7 +11,8 @@ add_library(echo SHARED
             kiss_fft/kiss_fft.c
             ece420_lib.cpp
             ece420_main.cpp
-            TextParser.cpp)
+            TextParser.cpp
+            Tuner.cpp)
 
 # include libraries needed for hello-jni lib
 target_link_libraries(echo

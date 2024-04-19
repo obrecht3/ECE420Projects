@@ -8,10 +8,33 @@
 // Converted to semitones where 0 is root and 12 is an octave up
 typedef int Pitch;
 
+struct PitchEvent {
+    unsigned long position; // in samples
+    float frequency; // hz
+
+    PitchEvent(unsigned long _position, float _frequency) : position{_position}, frequency{_frequency} {}
+};
+
 class TextParser {
 public:
-    TextParser();
+    TextParser(int _bufferSize, int _sampleRate);
     ~TextParser();
 
-    std::vector<Pitch> parse(std::string input);
+    void parse(std::string input);
+    void calcPitchEvents(float tempo, float userFreq);
+    std::vector<PitchEvent> getPitchEventsForNextBuffer();
+
+private:
+    int getNearestNote(float freq) const;
+
+private:
+    int bufferSize;
+    int sampleRate;
+//    double samplesPerNote;
+
+    unsigned long bufferOffset;
+//    double playPosition;
+
+    std::vector<Pitch> pitches;
+    std::vector<PitchEvent> events;
 };

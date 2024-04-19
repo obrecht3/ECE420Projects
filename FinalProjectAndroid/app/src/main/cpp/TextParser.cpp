@@ -4,17 +4,22 @@
 
 #include "TextParser.h"
 
-TextParser::TextParser() {}
+TextParser::TextParser(int _bufferSize, int _sampleRate)
+    : bufferSize{_bufferSize}
+    , sampleRate{_sampleRate}
+    , bufferOffset{0ul} {}
 TextParser::~TextParser() {}
 
-std::vector<Pitch> TextParser::parse(std::string input) {
-    const size_t numNotes = input.size();
-    std::vector<Pitch> sequence;
-    sequence.reserve(numNotes);
+void TextParser::parse(std::string input) {
+    if (!pitches.empty()) {
+        pitches.clear();
+    }
+
+    pitches.reserve(input.size());
 
     for (char c : input) {
         if (c == 'x' || c == 'X') {
-            sequence.push_back(-1);
+            pitches.push_back(-1);
         } else {
             if (c >= '1' && c <= '8') {
                 int num = -1;
@@ -44,10 +49,44 @@ std::vector<Pitch> TextParser::parse(std::string input) {
                         num = 12; // c +oct
                         break;
                 }
-                sequence.push_back(num);
+                pitches.push_back(num);
             }
         }
     }
+}
 
-    return sequence;
+void TextParser::calcPitchEvents(float tempo, float userFreq) {
+    const int n = getNearestNote(userFreq);
+
+    if (!events.empty()) {
+        events.clear();
+    }
+    events.reserve(pitches.size());
+
+    const double samplesPerNote = 30.0 * sampleRate / tempo; // 30 = 60 sec / 2 notes per sec
+
+    double pos = 0;
+    for (Pitch p : pitches) {
+        events.emplace_back(pos, 440.0 * pow(2.0, static_cast<double>(n + p) / 12.0));
+        pos += samplesPerNote;
+    }
+}
+
+int TextParser::getNearestNote(float freq) const {
+    return static_cast<int>(0.5 + 12.0 * log2(freq / 440.0));
+}
+
+std::vector<PitchEvent> TextParser::getPitchEventsForNextBuffer() {
+    std::vector<PitchEvent> bufferEvents;
+
+    const unsigned long nextBufferPos = bufferOffset + bufferSize;
+
+    for (PitchEvent event : events) {
+        if (event.position >= bufferOffset && event.position < nextBufferPos) {
+            bufferEvents.emplace_back(event.position - bufferOffset, event.frequency);
+        }
+    }
+
+    bufferOffset = nextBufferPos;
+    return bufferEvents;
 }
