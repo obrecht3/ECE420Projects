@@ -143,7 +143,7 @@ public class MainActivity extends Activity
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 int newTempo = 40 + i;        // 40 is the minimum tempo in BPM
                 tempo_TextView.setText("Tempo: " + Integer.toString(newTempo) + " BPM");
-                //writeNewTempo(newTempo);
+                writeNewTempo(newTempo);
             }
 
             @Override
@@ -152,7 +152,7 @@ public class MainActivity extends Activity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-
+        frequencySeekBar.setProgress(10);
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=

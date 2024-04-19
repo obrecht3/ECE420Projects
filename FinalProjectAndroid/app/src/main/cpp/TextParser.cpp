@@ -82,6 +82,10 @@ void TextParser::calcPitchEvents(float userFreq) {
         }
         pos += samplesPerNote;
     }
+
+    if (events.size() > 0) {
+        events.emplace_back(pos, 0.0);
+    }
 }
 
 int TextParser::getNearestNote(float freq) const {
@@ -90,7 +94,6 @@ int TextParser::getNearestNote(float freq) const {
 
 std::vector<PitchEvent> TextParser::getPitchEventsForNextBuffer() {
     std::vector<PitchEvent> bufferEvents;
-
     const unsigned long nextBufferPos = bufferOffset + bufferSize;
 
     for (PitchEvent event : events) {
