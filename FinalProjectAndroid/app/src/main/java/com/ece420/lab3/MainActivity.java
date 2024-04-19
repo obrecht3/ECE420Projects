@@ -61,10 +61,12 @@ public class MainActivity extends Activity
 
     // UI Variables
     Button controlButton;
-
     TextView notesInputRepeated;
     EditText notesInput;
     Button submitButton;
+    SeekBar frequencySeekBar;
+    TextView tempo_TextView;
+
 
     String  nativeSampleRate;
     String  nativeSampleBufSize;
@@ -129,6 +131,28 @@ public class MainActivity extends Activity
                 handleTextInput();
             }
         });
+
+        //set up tempo_TextView
+        tempo_TextView = (TextView) findViewById(R.id.tempo_TextView);
+        tempo_TextView.setText("Tempo: ");
+
+        // set up frequencySeekBar
+        frequencySeekBar = (SeekBar) findViewById(R.id.frequencySeekBar);
+        frequencySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                int newTempo = 40 + i;        // 40 is the minimum tempo in BPM
+                tempo_TextView.setText("Tempo: " + Integer.toString(newTempo) + " BPM");
+                //writeNewTempo(newTempo);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -313,5 +337,6 @@ public class MainActivity extends Activity
     public static native void startPlay();
     public static native void stopPlay();
     public static native void getNotesInput(String input);
+    public static native void writeNewTempo(int tempo);
 
 }

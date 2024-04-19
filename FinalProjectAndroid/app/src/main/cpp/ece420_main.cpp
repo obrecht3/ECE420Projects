@@ -10,7 +10,16 @@
 #include "TextParser.h"
 #include "Tuner.h"
 
-// TODO: CLEAN THIS UP
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint);
+}
+
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input);
+}
+
 // Student Variables
 #define EPOCH_PEAK_REGION_WIGGLE 30
 #define VOICED_THRESHOLD 100000000
@@ -95,6 +104,12 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
     gettimeofday(&end, NULL);
     LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint) {
+
 }
 
 extern "C"
