@@ -31,8 +31,11 @@ public:
 
     bool melodyDone();
 
+    double getSamplesPerNote();
+
 private:
     int getNearestNote(float freq) const;
+    int samplesPerNote;
 
 private:
     std::string prevInput;

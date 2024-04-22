@@ -66,6 +66,9 @@ public class MainActivity extends Activity
     Button submitButton;
     SeekBar frequencySeekBar;
     TextView tempo_TextView;
+    TextView envelope_TextView;
+    SeekBar envelopeSeekBar;
+
 
 
     String  nativeSampleRate;
@@ -153,6 +156,29 @@ public class MainActivity extends Activity
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
         frequencySeekBar.setProgress(10);
+
+        //set up envelope_TextView
+        envelope_TextView = (TextView) findViewById(R.id.envelope_TextView);
+        envelope_TextView.setText("Attack-Decay Envelope Peak");
+
+        //set upt envelopeSeekBar
+        envelopeSeekBar = (SeekBar) findViewById(R.id.envelopeSeekBar);
+        envelopeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                int envelopePeakPosition = i;
+                writeNewEnvelopePeakPosition(envelopePeakPosition);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+
+
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -338,5 +364,6 @@ public class MainActivity extends Activity
     public static native void stopPlay();
     public static native void getNotesInput(String input);
     public static native void writeNewTempo(int tempo);
+    public static native void writeNewEnvelopePeakPosition(int position);
 
 }

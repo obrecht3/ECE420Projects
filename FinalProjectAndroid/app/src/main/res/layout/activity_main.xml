@@ -60,5 +60,26 @@
         android:layout_marginTop="298dp"
         android:text="Tempo: " />
 
+    <SeekBar
+        android:id="@+id/envelopeSeekBar"
+        android:layout_width="378dp"
+        android:layout_height="47dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="21dp"
+        android:layout_marginBottom="159dp" />
+
+    <TextView
+        android:id="@+id/envelope_TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="125dp"
+        android:text="Attack-Decay Envelope Peak" />
+
 </RelativeLayout>
 

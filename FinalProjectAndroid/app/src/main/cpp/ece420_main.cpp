@@ -31,6 +31,9 @@ float bufferIn[BUFFER_SIZE] = {};
 float bufferOut[BUFFER_SIZE] = {};
 int newEpochIdx = FRAME_SIZE;
 
+double attackIncrement;
+double decayIncrement;
+
 // We have two variables here to ensure that we never change the desired frequency while
 // processing a frame. Thread synchronization, etc. Setting to 300 is only an initializer.
 int FREQ_NEW_ANDROID = 300;
@@ -121,12 +124,35 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
     gettimeofday(&end, NULL);
     LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+
 }
+
+std::vector<double> envelopeCreate(double attackIncrement, double decayIncrement, int newEnvelopePeakPosition){
+    std::vector<double> envelope;
+    int samplesPerNote = parser.getSamplesPerNote();
+    for(int i = 0; i >= samplesPerNote; i++){
+        if(i <= newEnvelopePeakPosition/100 * samplesPerNote){
+            envelope.emplace_back(attackIncrement * i);
+        } else {
+            envelope.emplace_back(1 - decayIncrement * (i - newEnvelopePeakPosition/100 * samplesPerNote));
+        }
+    }
+    return envelope;
+}
+
+
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTempo) {
     parser.setTempo(newTempo);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
+    attackIncrement = 100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
+    decayIncrement = -100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
 }
 
 extern "C"

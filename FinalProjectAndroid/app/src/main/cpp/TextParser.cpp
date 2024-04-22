@@ -112,3 +112,8 @@ bool TextParser::melodyDone() {
     if (done) bufferOffset = 0ul;
     return done;
 }
+
+double TextParser::getSamplesPerNote() {
+    return samplesPerNote;
+}
+
