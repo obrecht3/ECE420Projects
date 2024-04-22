@@ -46,7 +46,7 @@ Filter::~Filter() {
     lpf.clear();
 }
 
-void Filter::processBlock(float *data, float *envelope) {
+void Filter::processBlock(float *data, float *envelope, std::vector<PitchEvent> pitchEvents) {
     if (lpf.size() < 1) return;
 
     for (int i = 0; i < bufferSize; ++i) {

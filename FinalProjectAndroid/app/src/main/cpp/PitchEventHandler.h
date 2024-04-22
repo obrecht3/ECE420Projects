@@ -1,16 +1,19 @@
-//
-// Created by joels on 4/22/2024.
-//
+#pragma once
 
-#ifndef FINALPROJECTANDROID_PITCHEVENTHANDLER_H
-#define FINALPROJECTANDROID_PITCHEVENTHANDLER_H
-
-
+#include <vector>
+#include "TextParser.h"
 
 class PitchEventHandler {
+public:
+    PitchEventHandler();
+    ~PitchEventHandler();
 
+    void prepareForNextBuffer() { pitchEventIdx = 0; }
+    bool setCurrPitchEvent(const int bufferPos, const std::vector<PitchEvent>& events); // returns true if event changed
+    PitchEvent getCurrPitchEvent() { return currPitchEvent; }
+
+private:
+    PitchEvent currPitchEvent;
+
+    int pitchEventIdx;
 };
-
-
-
-#endif //FINALPROJECTANDROID_PITCHEVENTHANDLER_H

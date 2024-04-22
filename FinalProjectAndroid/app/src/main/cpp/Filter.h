@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "TextParser.h"
 
 class SinglePoleLPF {
 public:
@@ -29,7 +30,7 @@ public:
     Filter(double _sampleRate, int _bufferSize, int nCascades, double _res = 0.707);
     ~Filter();
 
-    void processBlock(float *data, float *envelope);
+    void processBlock(float *data, float *envelope, std::vector<PitchEvent> pitchEvents);
     void setRes(double newRes) { res = newRes; }
     void reset();
 

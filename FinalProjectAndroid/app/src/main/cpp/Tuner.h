@@ -5,6 +5,7 @@
 #include "kiss_fft/kiss_fft.h"
 #include "ece420_lib.h"
 #include "TextParser.h"
+#include "PitchEventHandler.h"
 
 class Tuner {
 public:
@@ -29,7 +30,7 @@ private:
     int sampleRate;
     int newEpochIdx;
 
-    PitchEvent currPitchEvent;
+    PitchEventHandler eventHandler;
 
     std::vector<float> bufferIn;
     std::vector<float> bufferOut;

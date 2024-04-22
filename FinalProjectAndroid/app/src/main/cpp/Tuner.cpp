@@ -11,9 +11,8 @@ Tuner::Tuner(int _frameSize, int _sampleRate)
     , frameSize{_frameSize}
     , sampleRate{_sampleRate}
     , newEpochIdx{frameSize}
-    , currPitchEvent{0, 0}
     , bufferIn(bufferSize, 0)
-    , bufferOut(bufferSize, 0){
+    , bufferOut(bufferSize, 0) {
 }
 
 Tuner::~Tuner() {
@@ -130,16 +129,17 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
         const int l = 2 * P0 + 1;
         float hWindowed[l];
 
-        int pitchEventIdx = 0;
         int P1 = 1;
+
+        eventHandler.prepareForNextBuffer();
+        PitchEvent currPitchEvent = eventHandler.getCurrPitchEvent();
         if (currPitchEvent.frequency > 0) {
             P1 = static_cast<int>(static_cast<float>(sampleRate) / currPitchEvent.frequency);
         }
 
         while (newEpochIdx < 2 * frameSize) {
-            const int nextPitchEventIdx = setCurrPitchEvent(pitchEventIdx, newEpochIdx - frameSize, pitchEvents);
-            if (nextPitchEventIdx >= 0) {
-                pitchEventIdx = nextPitchEventIdx;
+            if (eventHandler.setCurrPitchEvent(newEpochIdx - frameSize, pitchEvents)) {
+                currPitchEvent = eventHandler.getCurrPitchEvent();
                 if (currPitchEvent.frequency > 0) {
                     P1 = static_cast<int>(static_cast<float>(sampleRate) /
                                           currPitchEvent.frequency);
