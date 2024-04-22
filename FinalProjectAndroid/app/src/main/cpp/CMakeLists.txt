@@ -13,7 +13,9 @@ add_library(echo SHARED
             ece420_main.cpp
             TextParser.cpp
             Tuner.cpp
-            NoteDetector.cpp)
+            NoteDetector.cpp
+            Filter.cpp
+            PitchEventHandler.cpp)
 
 # include libraries needed for hello-jni lib
 target_link_libraries(echo

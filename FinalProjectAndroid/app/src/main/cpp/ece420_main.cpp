@@ -10,6 +10,7 @@
 #include "TextParser.h"
 #include "Tuner.h"
 #include "NoteDetector.h"
+#include "Filter.h"
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -27,26 +28,10 @@ Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstri
 #define FRAME_SIZE 1024
 #define BUFFER_SIZE (3 * FRAME_SIZE)
 #define F_S 48000
-float bufferIn[BUFFER_SIZE] = {};
-float bufferOut[BUFFER_SIZE] = {};
-int newEpochIdx = FRAME_SIZE;
-
-double attackIncrement;
-double decayIncrement;
-
-// We have two variables here to ensure that we never change the desired frequency while
-// processing a frame. Thread synchronization, etc. Setting to 300 is only an initializer.
-int FREQ_NEW_ANDROID = 300;
-int FREQ_NEW = 300;
-// Switch from UI (Use this to enable/disable TDPSOLA to display the spectrogram
-bool IS_TDPSOLA_ANDROID = false;
 
 // FRAME_SIZE is 1024 and we zero-pad it to 2048 to do FFT
 #define ZP_FACTOR 2
 #define FFT_SIZE (FRAME_SIZE * ZP_FACTOR)
-// Variable to store final FFT output
-float fftOut[FFT_SIZE] = {};
-bool isWritingFft = false;
 
 // FFT Vars
 kiss_fft_cfg kfftCfg = kiss_fft_alloc(FFT_SIZE, false, NULL,NULL);
@@ -55,7 +40,8 @@ kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
 TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
-NoteDetector noteDetector(FRAME_SIZE);
+//NoteDetector noteDetector(FRAME_SIZE);
+Filter filter(F_S, FRAME_SIZE, 2);
 
 void processFFT(float* in, float* out) {
     // 1. Apply hamming window to the entire FRAME_SIZE
@@ -80,16 +66,10 @@ void processFFT(float* in, float* out) {
 }
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
-    isWritingFft = false;
-
     // Keep in mind, we only have 20ms to process each buffer!
     struct timeval start;
     struct timeval end;
     gettimeofday(&start, NULL);
-
-    // Get the new desired frequency from android
-    FREQ_NEW = FREQ_NEW_ANDROID;
-
 
     // Data is encoded in signed PCM-16, little-endian, mono
     float data[FRAME_SIZE];
@@ -99,20 +79,19 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     }
 
     // PROCESS HERE
-//    noteDetector.detect(data);
     tuner.writeInputSamples(data);
     const int period = tuner.detectBufferPeriod();
-    parser.calcPitchEvents(220.0f);
-//    if (noteDetector.startPlaying()) {
-//        const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
-//        parser.calcPitchEvents(userFreq);
-//    }
+    const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
+    parser.calcPitchEvents(userFreq);
 
     std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
     tuner.processBlock(data, pitchEvents, period);
-//    if (parser.melodyDone()) {
-//        noteDetector.reset();
+
+//    float env[FRAME_SIZE];
+//    for (int i = 0; i < FRAME_SIZE; i++) {
+//        data[i] *= env[i];
 //    }
+//    filter.processBlock(data, env, pitchEvents);
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = data[i];

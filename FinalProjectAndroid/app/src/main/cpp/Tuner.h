@@ -5,6 +5,7 @@
 #include "kiss_fft/kiss_fft.h"
 #include "ece420_lib.h"
 #include "TextParser.h"
+#include "PitchEventHandler.h"
 
 class Tuner {
 public:
@@ -21,15 +22,13 @@ private:
     void findEpochLocations(std::vector<int> &epochLocations, float *buffer, int periodLen);
     void overlapAddArray(float *dest, float *src, int startIdx, int len);
 
-    int setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent> events);
-
 private:
     int bufferSize;
     int frameSize;
     int sampleRate;
     int newEpochIdx;
 
-    PitchEvent currPitchEvent;
+    PitchEventHandler eventHandler;
 
     std::vector<float> bufferIn;
     std::vector<float> bufferOut;
