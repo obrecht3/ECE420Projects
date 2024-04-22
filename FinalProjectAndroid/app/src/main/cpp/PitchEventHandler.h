@@ -1,0 +1,16 @@
+//
+// Created by joels on 4/22/2024.
+//
+
+#ifndef FINALPROJECTANDROID_PITCHEVENTHANDLER_H
+#define FINALPROJECTANDROID_PITCHEVENTHANDLER_H
+
+
+
+class PitchEventHandler {
+
+};
+
+
+
+#endif //FINALPROJECTANDROID_PITCHEVENTHANDLER_H
