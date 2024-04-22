@@ -17,7 +17,8 @@ Tuner::Tuner(int _frameSize, int _sampleRate)
 }
 
 Tuner::~Tuner() {
-
+    bufferIn.clear();
+    bufferOut.clear();
 }
 
 void Tuner::writeInputSamples(float *data) {

@@ -9,7 +9,11 @@ TextParser::TextParser(int _bufferSize, int _sampleRate)
     , sampleRate{_sampleRate}
     , prevUserFreq{0.0f}
     , bufferOffset{0ul} {}
-TextParser::~TextParser() {}
+
+TextParser::~TextParser() {
+    pitches.clear();
+    events.clear();
+}
 
 void TextParser::parse(std::string input) {
     if (prevInput == input) {
@@ -82,7 +86,6 @@ void TextParser::calcPitchEvents(float userFreq) {
         } else {
             events.emplace_back(pos, 440.0 * pow(2.0, static_cast<double>(n + p) / 12.0));
             events.emplace_back(pos + samplesPerNote * 0.8f, 0.0);
-
         }
         pos += samplesPerNote;
     }

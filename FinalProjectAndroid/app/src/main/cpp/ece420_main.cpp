@@ -10,6 +10,7 @@
 #include "TextParser.h"
 #include "Tuner.h"
 #include "NoteDetector.h"
+#include "Filter.h"
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -52,7 +53,7 @@ kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
 TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
-NoteDetector noteDetector(FRAME_SIZE);
+//NoteDetector noteDetector(FRAME_SIZE);
 
 void processFFT(float* in, float* out) {
     // 1. Apply hamming window to the entire FRAME_SIZE
@@ -96,20 +97,13 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     }
 
     // PROCESS HERE
-//    noteDetector.detect(data);
     tuner.writeInputSamples(data);
     const int period = tuner.detectBufferPeriod();
-//    parser.calcPitchEvents(220.0f);
-//    if (noteDetector.startPlaying()) {
     const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
     parser.calcPitchEvents(userFreq);
-//    }
 
     std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
     tuner.processBlock(data, pitchEvents, period);
-//    if (parser.melodyDone()) {
-//        noteDetector.reset();
-//    }
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = data[i];
