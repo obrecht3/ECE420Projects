@@ -22,8 +22,6 @@ private:
     void findEpochLocations(std::vector<int> &epochLocations, float *buffer, int periodLen);
     void overlapAddArray(float *dest, float *src, int startIdx, int len);
 
-    int setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent> events);
-
 private:
     int bufferSize;
     int frameSize;

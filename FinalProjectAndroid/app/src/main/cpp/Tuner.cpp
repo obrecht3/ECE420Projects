@@ -233,14 +233,3 @@ void Tuner::overlapAddArray(float *dest, float *src, int startIdx, int len) {
         dest[startIdx + i] += src[i];
     }
 }
-
-int Tuner::setCurrPitchEvent(int startIdx, int bufferPos, std::vector<PitchEvent> events) {
-    for (int i = startIdx; i < events.size(); ++i) {
-        if (std::abs(static_cast<int>(events[i].position - bufferPos)) <= std::abs(static_cast<int>(bufferPos - currPitchEvent.position))) {
-            currPitchEvent = events[i];
-            return i;
-        }
-    }
-
-    return -1;
-}
