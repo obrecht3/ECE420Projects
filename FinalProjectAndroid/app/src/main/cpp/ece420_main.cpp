@@ -89,7 +89,7 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 //    float env[FRAME_SIZE];
 //    for (int i = 0; i < FRAME_SIZE; i++) {
-//        env[i] = 1.0;
+//        data[i] *= env[i];
 //    }
 //    filter.processBlock(data, env, pitchEvents);
 

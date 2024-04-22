@@ -40,6 +40,8 @@ Filter::Filter(double _sampleRate, int _bufferSize, int nCascades, double _res)
     for (int i = 0; i < nCascades; ++i) {
         lpf.emplace_back(sampleRate);
     }
+
+    setMaxFrequencyInOctaves(2.0);
 }
 
 Filter::~Filter() {
@@ -49,19 +51,32 @@ Filter::~Filter() {
 void Filter::processBlock(float *data, float *envelope, std::vector<PitchEvent> pitchEvents) {
     if (lpf.size() < 1) return;
 
+    eventHandler.prepareForNextBuffer();
+    PitchEvent currPitchEvent = eventHandler.getCurrPitchEvent();
     for (int i = 0; i < bufferSize; ++i) {
-        // apply filters
-        const float g = lpf[0].calcG(envelope[i]);
-        const float inputSample = data[i];
-        float sample = lpf[0].processSample(inputSample - nonLinFeedback);
-        for (int j = 1; j < lpf.size(); ++j) {
-            lpf[j].setG(g);
-            sample = lpf[j].processSample(sample);
+        if (eventHandler.setCurrPitchEvent(i, pitchEvents)){
+            currPitchEvent = eventHandler.getCurrPitchEvent();
+            if (currPitchEvent.frequency == 0.0) {
+                for (auto filter: lpf) {
+                    filter.reset();
+                }
+            }
         }
 
-        // feedback loop
-        nonLinFeedback = res * (4 * tanh(sample) - comp * inputSample);
-        data[i] = sample;
+        if (currPitchEvent.frequency > 0.0) {
+            // apply filters
+            const float g = lpf[0].calcG(FrequencyCurve(envelope[i], currPitchEvent.frequency));
+            const float inputSample = data[i];
+            float sample = lpf[0].processSample(inputSample - nonLinFeedback);
+            for (int j = 1; j < lpf.size(); ++j) {
+                lpf[j].setG(g);
+                sample = lpf[j].processSample(sample);
+            }
+
+            // feedback loop
+            nonLinFeedback = res * (4 * tanh(sample) - comp * inputSample);
+            data[i] = sample;
+        }
     }
 }
 

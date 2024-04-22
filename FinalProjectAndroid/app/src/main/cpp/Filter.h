@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "TextParser.h"
+#include "PitchEventHandler.h"
 
 class SinglePoleLPF {
 public:
@@ -34,6 +35,13 @@ public:
     void setRes(double newRes) { res = newRes; }
     void reset();
 
+    void setMaxFrequencyInOctaves(double newFreq) {
+        relativeMaxFreqInOctaves = newFreq;
+        maxFreqExponentBase = pow(2.0, relativeMaxFreqInOctaves);
+    }
+
+private:
+    double FrequencyCurve(double x, double freq) { return freq * pow(maxFreqExponentBase, x); }
 private:
     double sampleRate;
     int bufferSize;
@@ -43,4 +51,9 @@ private:
     const double comp = 0.5;
     double res;
     double nonLinFeedback;
+
+    double relativeMaxFreqInOctaves;
+    double maxFreqExponentBase;
+
+    PitchEventHandler eventHandler;
 };
