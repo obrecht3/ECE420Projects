@@ -15,7 +15,8 @@ add_library(echo SHARED
             Tuner.cpp
             NoteDetector.cpp
             Filter.cpp
-            PitchEventHandler.cpp)
+            PitchEventHandler.cpp
+            EnvelopeGenerator.cpp)
 
 # include libraries needed for hello-jni lib
 target_link_libraries(echo

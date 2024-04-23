@@ -11,6 +11,7 @@
 #include "Tuner.h"
 #include "NoteDetector.h"
 #include "Filter.h"
+#include "EnvelopeGenerator.h"
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -42,6 +43,7 @@ TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
 //NoteDetector noteDetector(FRAME_SIZE);
 Filter filter(F_S, FRAME_SIZE, 2);
+EnvelopeGenerator envGenerator(FRAME_SIZE);
 
 void processFFT(float* in, float* out) {
     // 1. Apply hamming window to the entire FRAME_SIZE
@@ -87,11 +89,11 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
     tuner.processBlock(data, pitchEvents, period);
 
-//    float env[FRAME_SIZE];
-//    for (int i = 0; i < FRAME_SIZE; i++) {
-//        data[i] *= env[i];
-//    }
-//    filter.processBlock(data, env, pitchEvents);
+    envGenerator.setSamplesPerNote(parser.getSamplesPerNote());
+    const float *envelope = envGenerator.getNextBlock(pitchEvents);
+    for (int i = 0; i < FRAME_SIZE; i++) {
+        data[i] *= envelope[i];
+    }
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = data[i];
@@ -106,21 +108,6 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 }
 
-std::vector<double> envelopeCreate(double attackIncrement, double decayIncrement, int newEnvelopePeakPosition){
-    std::vector<double> envelope;
-    int samplesPerNote = parser.getSamplesPerNote();
-    for(int i = 0; i >= samplesPerNote; i++){
-        if(i <= newEnvelopePeakPosition/100 * samplesPerNote){
-            envelope.emplace_back(attackIncrement * i);
-        } else {
-            envelope.emplace_back(1 - decayIncrement * (i - newEnvelopePeakPosition/100 * samplesPerNote));
-        }
-    }
-    return envelope;
-}
-
-
-
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTempo) {
@@ -130,8 +117,7 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTem
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
-    attackIncrement = 100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
-    decayIncrement = -100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
+    envGenerator.setShape(static_cast<float>(newEnvelopePeakPosition) / 100.0, parser.getSamplesPerNote());
 }
 
 extern "C"

@@ -8,6 +8,7 @@ TextParser::TextParser(int _bufferSize, int _sampleRate)
     : bufferSize{_bufferSize}
     , sampleRate{_sampleRate}
     , prevUserFreq{0.0f}
+    , samplesPerNote{0.0}
     , bufferOffset{0ul} {}
 
 TextParser::~TextParser() {
@@ -77,7 +78,7 @@ void TextParser::calcPitchEvents(float userFreq) {
     }
     events.reserve(pitches.size());
 
-    const double samplesPerNote = 30.0 * sampleRate / tempo; // 30 = 60 sec / 2 notes per sec
+    samplesPerNote = 30.0 * sampleRate / tempo; // 30 = 60 sec / 2 notes per sec
 
     double pos = 0;
     for (Pitch p : pitches) {

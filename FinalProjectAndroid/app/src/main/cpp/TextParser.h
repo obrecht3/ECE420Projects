@@ -35,7 +35,6 @@ public:
 
 private:
     int getNearestNote(float freq) const;
-    int samplesPerNote;
 
 private:
     std::string prevInput;
@@ -43,6 +42,7 @@ private:
     int sampleRate;
     float tempo;
     float prevUserFreq;
+    double samplesPerNote;
 
     unsigned long bufferOffset;
 
