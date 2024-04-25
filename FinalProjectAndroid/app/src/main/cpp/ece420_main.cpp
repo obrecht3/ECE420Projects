@@ -19,7 +19,7 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint);
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input);
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input, jint melodyIdx);
 }
 
 // Student Variables
@@ -40,7 +40,12 @@ kiss_fft_cfg kfftCfg = kiss_fft_alloc(FFT_SIZE, false, NULL,NULL);
 kiss_fft_cpx kfftIn[FFT_SIZE] = {};
 kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
-TextParser parser(FRAME_SIZE, F_S);
+TextParser parser[MAX_NUM_MELODIES] = {
+    TextParser(FRAME_SIZE, F_S),
+    TextParser(FRAME_SIZE, F_S),
+    TextParser(FRAME_SIZE, F_S),
+};
+
 Tuner tuner(FRAME_SIZE, F_S, MAX_NUM_MELODIES);
 //NoteDetector noteDetector(FRAME_SIZE);
 Filter filter(F_S, FRAME_SIZE, 2);
@@ -84,12 +89,13 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     tuner.writeInputSamples(data);
     const int period = tuner.detectBufferPeriod();
     const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
-    parser.calcPitchEvents(userFreq);
 
     std::vector<std::vector<PitchEvent>> pitchEventsList;
-//    pitchEventsList.push_back(parser.getPitchEventsForNextBuffer());
-    pitchEventsList.push_back({{{0, 440}}});
-    pitchEventsList.push_back({{{0, 554}}});
+    for (auto& p : parser) {
+        p.calcPitchEvents(userFreq);
+        pitchEventsList.push_back(p.getPitchEventsForNextBuffer());
+    }
+
     tuner.processBlock(data, pitchEventsList, period);
 
 //    float env[FRAME_SIZE];
@@ -113,7 +119,7 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 std::vector<double> envelopeCreate(double attackIncrement, double decayIncrement, int newEnvelopePeakPosition){
     std::vector<double> envelope;
-    int samplesPerNote = parser.getSamplesPerNote();
+    int samplesPerNote = parser[0].getSamplesPerNote();
     for(int i = 0; i >= samplesPerNote; i++){
         if(i <= newEnvelopePeakPosition/100 * samplesPerNote){
             envelope.emplace_back(attackIncrement * i);
@@ -129,7 +135,9 @@ std::vector<double> envelopeCreate(double attackIncrement, double decayIncrement
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTempo) {
-    parser.setTempo(newTempo);
+    const int tempo = std::max(40, newTempo);
+    for (auto& p : parser)
+        p.setTempo(tempo);
 }
 
 extern "C"
@@ -141,9 +149,9 @@ Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jcla
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input) {
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input, jint melodyIdx) {
     const char *cstr = env->GetStringUTFChars(input, NULL);
     std::string str = std::string(cstr);
     env->ReleaseStringUTFChars(input, cstr);
-    parser.parse(str);
+    parser[melodyIdx].parse(str);
 }

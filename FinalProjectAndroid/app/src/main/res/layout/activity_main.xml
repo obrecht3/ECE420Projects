@@ -14,23 +14,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/notesInputRepeated"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="5dp"
+        android:layout_centerVertical="true"
         android:onClick="onEchoClick"
         android:text="@string/StartEcho" />
 
     <EditText
         android:id="@+id/notesInput"
-        android:layout_width="wrap_content"
+        android:layout_width="191dp"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text" />
 
     <TextView
         android:id="@+id/notesInputRepeated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/notesInput"  />
+        android:layout_width="395dp"
+        android:layout_height="82dp"
+        android:layout_below="@id/melodySelector" />
 
     <Button
         android:id="@+id/submitButton"
@@ -80,6 +79,13 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="125dp"
         android:text="Attack-Decay Envelope Peak" />
+
+    <Spinner
+        android:id="@+id/melodySelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/notesInput"
+        android:layout_marginTop="3dp" />
 
 </RelativeLayout>
 

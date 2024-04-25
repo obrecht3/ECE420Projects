@@ -37,11 +37,15 @@ import android.support.v4.app.ActivityCompat;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -51,6 +55,7 @@ import android.widget.Toast;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.IntStream;
@@ -68,8 +73,11 @@ public class MainActivity extends Activity
     TextView tempo_TextView;
     TextView envelope_TextView;
     SeekBar envelopeSeekBar;
+    Spinner melodySelector;
 
-
+    final int NumMelodies = 3;
+    ArrayList<String> melodyStrings = new ArrayList<String>(NumMelodies);
+    int melodyIdx = 0;
 
     String  nativeSampleRate;
     String  nativeSampleBufSize;
@@ -94,8 +102,6 @@ public class MainActivity extends Activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         super.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-
 
         // Google NDK Stuff
         controlButton = (Button)findViewById((R.id.capture_control_button));
@@ -177,8 +183,29 @@ public class MainActivity extends Activity
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
+        melodySelector = (Spinner) findViewById(R.id.melodySelector);
+        ArrayList<String> melodySelectorItems = new ArrayList<String>();
+        for (int i = 0; i < NumMelodies; ++i) {
+            melodySelectorItems.add("Melody " + Integer.toString(i + 1));
+        }
+        ArrayAdapter<String> melodySelectorAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, melodySelectorItems);
+        melodySelector.setAdapter(melodySelectorAdapter);
+        melodySelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                melodyIdx = position;
 
+                for (int i = melodyStrings.size(); i < NumMelodies; ++i) {
+                    melodyStrings.add("");
+                }
+                notesInput.setText(melodyStrings.get(melodyIdx));
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -238,8 +265,14 @@ public class MainActivity extends Activity
             }
         }
 
-        notesInputRepeated.setText("Submitted!");
-        getNotesInput(sequence);
+        melodyStrings.set(melodyIdx, sequence);
+
+        String newText = "";
+        for (int i = 0; i < melodyStrings.size(); ++i) {
+            newText += melodySelector.getItemAtPosition(i).toString() + ": " + melodyStrings.get(i) + "\n";
+        }
+        notesInputRepeated.setText(newText);
+        getNotesInput(sequence, melodyIdx);
     }
 
     private void startEcho() {
@@ -362,7 +395,7 @@ public class MainActivity extends Activity
     public static native void deleteAudioRecorder();
     public static native void startPlay();
     public static native void stopPlay();
-    public static native void getNotesInput(String input);
+    public static native void getNotesInput(String input, int melodyIdx);
     public static native void writeNewTempo(int tempo);
     public static native void writeNewEnvelopePeakPosition(int position);
 
