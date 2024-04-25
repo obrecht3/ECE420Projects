@@ -12,6 +12,7 @@ public:
     void reset();
     float calcG(float cutoff);
     void setG(float newG) { g = newG; }
+
     float processSample(float sample);
 
 private:
@@ -24,6 +25,12 @@ private:
 
     double prevInputSample;
     double prevOutputSample;
+};
+
+class SinglePoleHPF : public SinglePoleLPF {
+public:
+    SinglePoleHPF(double _sampleRate) : SinglePoleLPF(_sampleRate) {}
+    float processSample(float sample);
 };
 
 class Filter {

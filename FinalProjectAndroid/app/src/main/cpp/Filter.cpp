@@ -86,3 +86,7 @@ void Filter::reset() {
         filter.reset();
     }
 }
+
+float SinglePoleHPF::processSample(float sample) {
+    return sample - SinglePoleLPF::processSample(sample);
+}

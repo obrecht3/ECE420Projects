@@ -11,7 +11,8 @@ Tuner::Tuner(int _frameSize, int _sampleRate, int maxNumMelodies)
     , frameSize{_frameSize}
     , sampleRate{_sampleRate}
     , newEpochIdx{frameSize}
-    , bufferIn(bufferSize, 0.0f) {
+    , bufferIn(bufferSize, 0.0f)
+    , highpass(sampleRate) {
     bufferOut.reserve(maxNumMelodies);
     for (int i = 0; i < maxNumMelodies; i++) {
         bufferOut.emplace_back(bufferSize, 0.0f);
@@ -106,6 +107,12 @@ int Tuner::detectBufferPeriod() {
 
 void Tuner::processBlock(float *data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen) {
     // The whole kit and kaboodle -- pitch shift
+    const float fundamentalFreq = static_cast<float>(sampleRate) / static_cast<float>(periodLen);
+    highpass.setG(highpass.calcG(fundamentalFreq));
+    for (int i = 0; i < frameSize; i++) {
+        highpass.processSample(bufferIn[i]);
+    }
+
     const int numMelodies = std::min(pitchEventsList.size(), bufferOut.size());
     for (int melodyIdx = 0; melodyIdx < numMelodies; ++melodyIdx) {
         pitchShift(pitchEventsList[melodyIdx], periodLen, melodyIdx);

@@ -6,6 +6,7 @@
 #include "ece420_lib.h"
 #include "TextParser.h"
 #include "PitchEventHandler.h"
+#include "Filter.h"
 
 class Tuner {
 public:
@@ -32,6 +33,8 @@ private:
 
     std::vector<float> bufferIn;
     std::vector<std::vector<float>> bufferOut;
+
+    SinglePoleHPF highpass;
 
     const int EPOCH_PEAK_REGION_WIGGLE = 30;
     const int VOICED_THRESHOLD = 100000000;
