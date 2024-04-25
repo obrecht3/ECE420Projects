@@ -178,9 +178,6 @@ public class MainActivity extends Activity
         });
         envelopeSeekBar.setProgress(10);
 
-
-
-
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED) {

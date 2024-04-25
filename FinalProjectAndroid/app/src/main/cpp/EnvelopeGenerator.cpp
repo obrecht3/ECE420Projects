@@ -35,11 +35,11 @@ float EnvelopeGenerator::getNextSample() {
 }
 
 void EnvelopeGenerator::setShape(double newShape, double samplesPerNote) {
-    shape = newShape;
-    const double pad = 0.01; // so we don't divide by 0
+    const double pad = 0.00001; // so we don't divide by 0
+    shape = newShape * (1.0 - pad * 2.0) + pad;
     const double shapeSamples = samplesPerNote * shape;
-    attackInc = 1.0 / (shapeSamples + pad);
-    decayInc = 1.0 / (1.0 + pad - shapeSamples);
+    attackInc = 1.0 / (shapeSamples);
+    decayInc = 1.0 / (samplesPerNote - shapeSamples);
 }
 
 void EnvelopeGenerator::setSamplesPerNote(double samplesPerNote) {

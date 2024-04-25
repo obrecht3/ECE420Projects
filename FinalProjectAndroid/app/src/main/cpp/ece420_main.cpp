@@ -117,7 +117,7 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTem
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
-    envGenerator.setShape(static_cast<float>(newEnvelopePeakPosition) / 100.0, parser.getSamplesPerNote());
+    envGenerator.setShape(static_cast<float>(newEnvelopePeakPosition) / 100.0f, parser.getSamplesPerNote());
 }
 
 extern "C"
