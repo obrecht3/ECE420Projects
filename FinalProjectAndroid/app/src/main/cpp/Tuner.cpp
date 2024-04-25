@@ -6,17 +6,24 @@
 #include "kiss_fft/kiss_fft.h"
 #include <math.h>
 
-Tuner::Tuner(int _frameSize, int _sampleRate)
+Tuner::Tuner(int _frameSize, int _sampleRate, int maxNumMelodies)
     : bufferSize{3 * _frameSize}
     , frameSize{_frameSize}
     , sampleRate{_sampleRate}
     , newEpochIdx{frameSize}
-    , bufferIn(bufferSize, 0)
-    , bufferOut(bufferSize, 0) {
+    , bufferIn(bufferSize, 0.0f) {
+    bufferOut.reserve(maxNumMelodies);
+    for (int i = 0; i < maxNumMelodies; i++) {
+        bufferOut.emplace_back(bufferSize, 0.0f);
+    }
 }
 
 Tuner::~Tuner() {
     bufferIn.clear();
+
+    for (auto buf: bufferOut) {
+        buf.clear();
+    }
     bufferOut.clear();
 }
 
@@ -97,27 +104,34 @@ int Tuner::detectBufferPeriod() {
     return periodLen;
 }
 
-void Tuner::processBlock(float *data, std::vector<PitchEvent> pitchEvents, int periodLen) {
+void Tuner::processBlock(float *data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen) {
     // The whole kit and kaboodle -- pitch shift
-    bool isVoiced = pitchShift(pitchEvents, periodLen);
+    const int numMelodies = std::min(pitchEventsList.size(), bufferOut.size());
+    for (int melodyIdx = 0; melodyIdx < numMelodies; ++melodyIdx) {
+        pitchShift(pitchEventsList[melodyIdx], periodLen, melodyIdx);
+    }
 
-    if (isVoiced) {
+    if (periodLen > 0) {
         for (int i = 0; i < frameSize; i++) {
-            data[i] = (int16_t) bufferOut[i];
+            data[i] = bufferOut[0][i];
+            for (int melodyIdx = 1; melodyIdx < numMelodies; ++melodyIdx) {
+                data[i] += bufferOut[melodyIdx][i];
+            }
         }
     }
 
-    // Very last thing, update your output circular buffer!
-    for (int i = 0; i < 2 * frameSize; i++) {
-        bufferOut[i] = bufferOut[i + frameSize - 1];
-    }
+    for (int melodyIdx = 0; melodyIdx < numMelodies; ++melodyIdx) {
+        for (int i = 0; i < 2 * frameSize; i++) {
+            bufferOut[melodyIdx][i] = bufferOut[melodyIdx][i + frameSize - 1];
+        }
 
-    for (int i = 0; i < frameSize; i++) {
-        bufferOut[i + 2 * frameSize - 1] = 0;
+        for (int i = 0; i < frameSize; i++) {
+            bufferOut[melodyIdx][i + 2 * frameSize - 1] = 0.0f;
+        }
     }
 }
 
-bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
+void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int melodyIdx) {
     // Lab 4 code is condensed into this function
     // If voiced
     if (periodLen > 0) {
@@ -159,7 +173,7 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
                 }
 
                 // overlap
-                overlapAddArray(bufferOut.data(), hWindowed, newEpochIdx - P0, l);
+                overlapAddArray(bufferOut[melodyIdx].data(), hWindowed, newEpochIdx - P0, l);
                 newEpochIdx += P1;
             } else {
                 newEpochIdx++;
@@ -174,8 +188,6 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
     if (newEpochIdx < frameSize) {
         newEpochIdx = frameSize;
     }
-
-    return (periodLen > 0);
 }
 
 void Tuner::findEpochLocations(std::vector<int> &epochLocations, float *buffer, int periodLen) {

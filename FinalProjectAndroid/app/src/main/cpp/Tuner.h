@@ -9,16 +9,16 @@
 
 class Tuner {
 public:
-    Tuner(int _frameSize, int _sampleRate);
+    Tuner(int _frameSize, int _sampleRate, int maxNumMelodies);
     ~Tuner();
 
     // should execute writeInputSamples THEN detectBufferPeriod THEN processBlock to compute full TD-PSOLA
     void writeInputSamples(float *data);
     int detectBufferPeriod(); // this is separate to eventually cut down on computation for multiple melodies
-    void processBlock(float *data, std::vector<PitchEvent> pitchEvents, int periodLen);
+    void processBlock(float *data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen);
 
 private:
-    bool pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen);
+    void pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int melodyIdx);
     void findEpochLocations(std::vector<int> &epochLocations, float *buffer, int periodLen);
     void overlapAddArray(float *dest, float *src, int startIdx, int len);
 
@@ -31,7 +31,7 @@ private:
     PitchEventHandler eventHandler;
 
     std::vector<float> bufferIn;
-    std::vector<float> bufferOut;
+    std::vector<std::vector<float>> bufferOut;
 
     const int EPOCH_PEAK_REGION_WIGGLE = 30;
     const int VOICED_THRESHOLD = 100000000;

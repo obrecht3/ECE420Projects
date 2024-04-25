@@ -33,13 +33,15 @@ Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstri
 #define ZP_FACTOR 2
 #define FFT_SIZE (FRAME_SIZE * ZP_FACTOR)
 
+#define MAX_NUM_MELODIES 3
+
 // FFT Vars
 kiss_fft_cfg kfftCfg = kiss_fft_alloc(FFT_SIZE, false, NULL,NULL);
 kiss_fft_cpx kfftIn[FFT_SIZE] = {};
 kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
 TextParser parser(FRAME_SIZE, F_S);
-Tuner tuner(FRAME_SIZE, F_S);
+Tuner tuner(FRAME_SIZE, F_S, MAX_NUM_MELODIES);
 //NoteDetector noteDetector(FRAME_SIZE);
 Filter filter(F_S, FRAME_SIZE, 2);
 
@@ -84,8 +86,11 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
     parser.calcPitchEvents(userFreq);
 
-    std::vector<PitchEvent> pitchEvents = parser.getPitchEventsForNextBuffer();
-    tuner.processBlock(data, pitchEvents, period);
+    std::vector<std::vector<PitchEvent>> pitchEventsList;
+//    pitchEventsList.push_back(parser.getPitchEventsForNextBuffer());
+    pitchEventsList.push_back({{{0, 440}}});
+    pitchEventsList.push_back({{{0, 554}}});
+    tuner.processBlock(data, pitchEventsList, period);
 
 //    float env[FRAME_SIZE];
 //    for (int i = 0; i < FRAME_SIZE; i++) {
@@ -130,8 +135,8 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTem
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
-    attackIncrement = 100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
-    decayIncrement = -100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
+//    attackIncrement = 100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
+//    decayIncrement = -100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
 }
 
 extern "C"
