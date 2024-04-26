@@ -42,30 +42,8 @@ kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
 //NoteDetector noteDetector(FRAME_SIZE);
-Filter filter(F_S, FRAME_SIZE, 2);
+Filter filter(F_S, FRAME_SIZE, 2, 16.0, 8.0);
 EnvelopeGenerator envGenerator(FRAME_SIZE);
-
-void processFFT(float* in, float* out) {
-    // 1. Apply hamming window to the entire FRAME_SIZE
-    for (int i = 0; i < FRAME_SIZE; i++) {
-        kfftIn[i] = { in[i] * getHanningCoef(FRAME_SIZE,i), 0.0f };
-    }
-
-    // 2. Zero padding to FFT_SIZE = FRAME_SIZE * ZP_FACTOR
-    // probably not necessary
-    for (int i = FRAME_SIZE; i < FFT_SIZE; i++) {
-        kfftIn[i] = {0.0f, 0.0f};
-    }
-
-    // 3. Apply fft with KISS_FFT engine
-    kiss_fft(kfftCfg, kfftIn, kfftOut);
-
-    // 4. Scale fftOut[] to between 0 and 1 with log() and linear scaling
-    for (int i = 0; i < FFT_SIZE; i++) {
-        const float magSquared = kfftOut[i].r * kfftOut[i].r + kfftOut[i].i + kfftOut[i].i;
-        out[i] = log10(magSquared) * 0.0000001;
-    }
-}
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
@@ -91,6 +69,8 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
     envGenerator.setSamplesPerNote(parser.getSamplesPerNote());
     const float *envelope = envGenerator.getNextBlock(pitchEvents);
+    filter.processBlock(data, envelope, pitchEvents);
+
     for (int i = 0; i < FRAME_SIZE; i++) {
         data[i] *= envelope[i];
     }
