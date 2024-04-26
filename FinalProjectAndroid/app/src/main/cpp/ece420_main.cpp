@@ -42,8 +42,7 @@ kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 TextParser parser(FRAME_SIZE, F_S);
 Tuner tuner(FRAME_SIZE, F_S);
 //NoteDetector noteDetector(FRAME_SIZE);
-SinglePoleLPF inputFilter(F_S);
-Filter filter(F_S, FRAME_SIZE, 2, 2.0, 8.0);
+Filter filter(F_S, FRAME_SIZE, 2, 4.0, 8.0);
 EnvelopeGenerator envGenerator(FRAME_SIZE);
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
@@ -54,24 +53,9 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
     // Data is encoded in signed PCM-16, little-endian, mono
     float data[FRAME_SIZE];
-    float initialEnergy = 0.0f;
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = ((uint16_t) dataBuf->buf_[2 * i]) | (((uint16_t) dataBuf->buf_[2 * i + 1]) << 8);
         data[i] = value;
-        initialEnergy += data[i] * data[i];
-    }
-
-    // low pass filter
-    inputFilter.setG(inputFilter.calcG(100.0f));
-    float lpfEnergy = 0.0f;
-    for (int i = 0; i < FRAME_SIZE; i++) {
-        data[i] = inputFilter.processSample(data[i]);
-        lpfEnergy += data[i] * data[i];
-    }
-
-    const float energyAdjustment = initialEnergy / lpfEnergy;
-    for (int i = 0; i < FRAME_SIZE; i++) {
-        data[i] *= energyAdjustment;
     }
 
     // PROCESS HERE

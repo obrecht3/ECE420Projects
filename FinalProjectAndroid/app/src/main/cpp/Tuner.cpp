@@ -129,6 +129,11 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
         const int l = 2 * P0 + 1;
         float hWindowed[l];
 
+//        float maxPeak = 0.0f;
+//        for (int i = 0; i < bufferIn.size(); ++i) {
+//            maxPeak = std::max(maxPeak, std::abs(hWindowed[i]));
+//        }
+
         int P1 = 1;
 
         eventHandler.prepareForNextBuffer();
@@ -152,10 +157,16 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
                                                  epochLocations.size() - 2);
 
                 // apply Hanning window
+                float peak = 0.0f;
                 for (int i = 0; i < l; i++) {
-                    const int pos =
-                            (epochLocations[closestIdx] - P0 + i + bufferSize) % (bufferSize);
+                    const int pos = (epochLocations[closestIdx] - P0 + i + bufferSize) % (bufferSize);
                     hWindowed[i] = getHanningCoef(l, i) * bufferIn[pos];
+                    peak = std::max(peak, std::abs(hWindowed[i]));
+                }
+
+                const float scale = 5000.0f / peak;
+                for (int i = 0; i < l; i++) {
+                    hWindowed[i] *= scale;
                 }
 
                 // overlap
