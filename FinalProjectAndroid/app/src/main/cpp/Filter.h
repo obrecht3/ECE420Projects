@@ -35,10 +35,10 @@ public:
 
 class Filter {
 public:
-    Filter(double _sampleRate, int _bufferSize, int nCascades, double _res = 0.707);
+    Filter(double _sampleRate, int _bufferSize, int nCascades, double _res = 0.707, double _maxFrequencyInOctaves = 2.0);
     ~Filter();
 
-    void processBlock(float *data, float *envelope, std::vector<PitchEvent> pitchEvents);
+    void processBlock(float *data, const float *envelope, std::vector<PitchEvent> pitchEvents);
     void setRes(double newRes) { res = newRes; }
     void reset();
 

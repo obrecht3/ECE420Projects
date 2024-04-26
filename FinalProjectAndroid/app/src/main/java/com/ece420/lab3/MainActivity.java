@@ -172,7 +172,7 @@ public class MainActivity extends Activity
         envelopeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                int envelopePeakPosition = i;
+                final int envelopePeakPosition = i;
                 writeNewEnvelopePeakPosition(envelopePeakPosition);
             }
 
@@ -182,6 +182,7 @@ public class MainActivity extends Activity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+        envelopeSeekBar.setProgress(10);
 
         melodySelector = (Spinner) findViewById(R.id.melodySelector);
         ArrayList<String> melodySelectorItems = new ArrayList<String>();

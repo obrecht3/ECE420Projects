@@ -11,6 +11,7 @@
 #include "Tuner.h"
 #include "NoteDetector.h"
 #include "Filter.h"
+#include "EnvelopeGenerator.h"
 
 extern "C" {
 JNIEXPORT void JNICALL
@@ -48,29 +49,8 @@ TextParser parser[MAX_NUM_MELODIES] = {
 
 Tuner tuner(FRAME_SIZE, F_S, MAX_NUM_MELODIES);
 //NoteDetector noteDetector(FRAME_SIZE);
-Filter filter(F_S, FRAME_SIZE, 2);
-
-void processFFT(float* in, float* out) {
-    // 1. Apply hamming window to the entire FRAME_SIZE
-    for (int i = 0; i < FRAME_SIZE; i++) {
-        kfftIn[i] = { in[i] * getHanningCoef(FRAME_SIZE,i), 0.0f };
-    }
-
-    // 2. Zero padding to FFT_SIZE = FRAME_SIZE * ZP_FACTOR
-    // probably not necessary
-    for (int i = FRAME_SIZE; i < FFT_SIZE; i++) {
-        kfftIn[i] = {0.0f, 0.0f};
-    }
-
-    // 3. Apply fft with KISS_FFT engine
-    kiss_fft(kfftCfg, kfftIn, kfftOut);
-
-    // 4. Scale fftOut[] to between 0 and 1 with log() and linear scaling
-    for (int i = 0; i < FFT_SIZE; i++) {
-        const float magSquared = kfftOut[i].r * kfftOut[i].r + kfftOut[i].i + kfftOut[i].i;
-        out[i] = log10(magSquared) * 0.0000001;
-    }
-}
+Filter filter(F_S, FRAME_SIZE, 2, 16.0, 8.0);
+EnvelopeGenerator envGenerator(FRAME_SIZE);
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
@@ -98,11 +78,13 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
     tuner.processBlock(data, pitchEventsList, period);
 
-//    float env[FRAME_SIZE];
+//    envGenerator.setSamplesPerNote(parser.getSamplesPerNote());
+//    const float *envelope = envGenerator.getNextBlock(pitchEvents);
+//    filter.processBlock(data, envelope, pitchEvents);
+//
 //    for (int i = 0; i < FRAME_SIZE; i++) {
-//        data[i] *= env[i];
+//        data[i] *= envelope[i];
 //    }
-//    filter.processBlock(data, env, pitchEvents);
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = data[i];
@@ -117,21 +99,6 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 }
 
-std::vector<double> envelopeCreate(double attackIncrement, double decayIncrement, int newEnvelopePeakPosition){
-    std::vector<double> envelope;
-    int samplesPerNote = parser[0].getSamplesPerNote();
-    for(int i = 0; i >= samplesPerNote; i++){
-        if(i <= newEnvelopePeakPosition/100 * samplesPerNote){
-            envelope.emplace_back(attackIncrement * i);
-        } else {
-            envelope.emplace_back(1 - decayIncrement * (i - newEnvelopePeakPosition/100 * samplesPerNote));
-        }
-    }
-    return envelope;
-}
-
-
-
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTempo) {
@@ -143,8 +110,7 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTem
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
-//    attackIncrement = 100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
-//    decayIncrement = -100/(parser.getSamplesPerNote() * newEnvelopePeakPosition);
+    envGenerator.setShape(static_cast<float>(newEnvelopePeakPosition) / 100.0f, parser[0].getSamplesPerNote());
 }
 
 extern "C"

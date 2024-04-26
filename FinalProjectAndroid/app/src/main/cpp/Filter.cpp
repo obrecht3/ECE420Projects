@@ -31,7 +31,7 @@ float SinglePoleLPF::calcG(float cutoff) {
     return g;
 }
 
-Filter::Filter(double _sampleRate, int _bufferSize, int nCascades, double _res)
+Filter::Filter(double _sampleRate, int _bufferSize, int nCascades, double _res, double _maxFrequencyInOctaves)
     : sampleRate{_sampleRate}
     , bufferSize{_bufferSize}
     , res{_res}
@@ -41,14 +41,14 @@ Filter::Filter(double _sampleRate, int _bufferSize, int nCascades, double _res)
         lpf.emplace_back(sampleRate);
     }
 
-    setMaxFrequencyInOctaves(2.0);
+    setMaxFrequencyInOctaves(_maxFrequencyInOctaves);
 }
 
 Filter::~Filter() {
     lpf.clear();
 }
 
-void Filter::processBlock(float *data, float *envelope, std::vector<PitchEvent> pitchEvents) {
+void Filter::processBlock(float *data, const float *envelope, std::vector<PitchEvent> pitchEvents) {
     if (lpf.size() < 1) return;
 
     eventHandler.prepareForNextBuffer();
