@@ -89,7 +89,6 @@ int Tuner::detectBufferPeriod() {
     int periodLen = findMaxArrayIdx(autoc, minIdx, maxIdx);
     float freq = ((float) sampleRate) / periodLen;
 
-    // TODO: tune (set freq < 1)?
     if (freq < 50) {
         periodLen = -1;
     }
@@ -129,11 +128,6 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
         const int l = 2 * P0 + 1;
         float hWindowed[l];
 
-//        float maxPeak = 0.0f;
-//        for (int i = 0; i < bufferIn.size(); ++i) {
-//            maxPeak = std::max(maxPeak, std::abs(hWindowed[i]));
-//        }
-
         int P1 = 1;
 
         eventHandler.prepareForNextBuffer();
@@ -164,7 +158,7 @@ bool Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen) {
                     peak = std::max(peak, std::abs(hWindowed[i]));
                 }
 
-                const float scale = 5000.0f / peak;
+                const float scale = 4000.0f / peak;
                 for (int i = 0; i < l; i++) {
                     hWindowed[i] *= scale;
                 }
