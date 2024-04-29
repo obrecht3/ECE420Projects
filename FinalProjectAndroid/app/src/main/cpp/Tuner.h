@@ -14,7 +14,7 @@ public:
     ~Tuner();
 
     // should execute writeInputSamples THEN detectBufferPeriod THEN processBlock to compute full TD-PSOLA
-    void writeInputSamples(float *data);
+    void writeInputSamples(const float *data);
     int detectBufferPeriod(); // this is separate to eventually cut down on computation for multiple melodies
     void processBlock(std::vector<std::vector<float>>& data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen);
 

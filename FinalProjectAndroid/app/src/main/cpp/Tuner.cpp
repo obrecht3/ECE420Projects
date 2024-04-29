@@ -28,7 +28,7 @@ Tuner::~Tuner() {
     bufferOut.clear();
 }
 
-void Tuner::writeInputSamples(float *data) {
+void Tuner::writeInputSamples(const float *data) {
     // Shift our old data back to make room for the new data
     for (int i = 0; i < 2 * frameSize; i++) {
         bufferIn[i] = bufferIn[i + frameSize - 1];

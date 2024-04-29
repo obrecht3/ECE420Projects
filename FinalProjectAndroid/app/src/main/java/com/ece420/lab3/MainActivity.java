@@ -44,6 +44,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -69,11 +70,13 @@ public class MainActivity extends Activity
     TextView notesInputRepeated;
     EditText notesInput;
     Button submitButton;
-    SeekBar frequencySeekBar;
+    SeekBar tempoSeekBar;
     TextView tempo_TextView;
     TextView envelope_TextView;
     SeekBar envelopeSeekBar;
     Spinner melodySelector;
+    Switch recordModeSwitch;
+    Button recordButton;
 
     final int NumMelodies = 3;
     ArrayList<String> melodyStrings = new ArrayList<String>(NumMelodies);
@@ -145,9 +148,9 @@ public class MainActivity extends Activity
         tempo_TextView = (TextView) findViewById(R.id.tempo_TextView);
         tempo_TextView.setText("Tempo: ");
 
-        // set up frequencySeekBar
-        frequencySeekBar = (SeekBar) findViewById(R.id.frequencySeekBar);
-        frequencySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        // set up tempoSeekBar
+        tempoSeekBar = (SeekBar) findViewById(R.id.tempoSeekBar);
+        tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 int newTempo = (int)(40.0f + 2.405f * (float)i);        // BPM From 40 to 280
@@ -161,7 +164,7 @@ public class MainActivity extends Activity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-        frequencySeekBar.setProgress(10);
+        tempoSeekBar.setProgress(10);
 
         //set up envelope_TextView
         envelope_TextView = (TextView) findViewById(R.id.envelope_TextView);
@@ -208,6 +211,42 @@ public class MainActivity extends Activity
             }
         });
 
+        recordButton = (Button) findViewById(R.id.recordButton);
+        recordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recordButton.getText() == "Record") {
+                    recordButton.setText("Stop");
+                    recordButton.setBackgroundColor(Color.RED);
+                    recordButton.setTextColor(Color.WHITE);
+                    startRecord();
+                } else {
+                    recordButton.setText("Record");
+                    recordButton.setBackgroundColor(Color.GREEN);
+                    recordButton.setTextColor(Color.BLACK);
+                    stopRecord();
+                }
+            }
+        });
+        recordButton.callOnClick();
+
+        recordModeSwitch = (Switch) findViewById(R.id.recordModeSwitch);
+        recordModeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    recordButton.setVisibility(View.VISIBLE);
+                    recordButton.setText("");
+                    recordButton.callOnClick();
+
+                } else {
+                    recordButton.setVisibility(View.INVISIBLE);
+                    stopRecord();
+                }
+            }
+        });
+        recordModeSwitch.setChecked(true);
+
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -218,7 +257,6 @@ public class MainActivity extends Activity
             return;
         }
         startEcho();
-
     }
     @Override
     protected void onDestroy() {
@@ -399,5 +437,9 @@ public class MainActivity extends Activity
     public static native void getNotesInput(String input, int melodyIdx);
     public static native void writeNewTempo(int tempo);
     public static native void writeNewEnvelopePeakPosition(int position);
+
+    public static native void setRecordMode(boolean recordModeOn);
+    public static native void startRecord();
+    public static native void stopRecord();
 
 }
