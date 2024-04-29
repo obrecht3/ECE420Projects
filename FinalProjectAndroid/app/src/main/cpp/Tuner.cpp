@@ -97,7 +97,6 @@ int Tuner::detectBufferPeriod() {
     int periodLen = findMaxArrayIdx(autoc, minIdx, maxIdx);
     float freq = ((float) sampleRate) / periodLen;
 
-    // TODO: tune (set freq < 1)?
     if (freq < 50) {
         periodLen = -1;
     }
@@ -173,10 +172,16 @@ void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int m
                                                  epochLocations.size() - 2);
 
                 // apply Hanning window
+                float peak = 0.0f;
                 for (int i = 0; i < l; i++) {
-                    const int pos =
-                            (epochLocations[closestIdx] - P0 + i + bufferSize) % (bufferSize);
+                    const int pos = (epochLocations[closestIdx] - P0 + i + bufferSize) % (bufferSize);
                     hWindowed[i] = getHanningCoef(l, i) * bufferIn[pos];
+                    peak = std::max(peak, std::abs(hWindowed[i]));
+                }
+
+                const float scale = 4000.0f / peak;
+                for (int i = 0; i < l; i++) {
+                    hWindowed[i] *= scale;
                 }
 
                 // overlap

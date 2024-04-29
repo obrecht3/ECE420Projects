@@ -49,7 +49,7 @@ TextParser parser[MAX_NUM_MELODIES] = {
 
 Tuner tuner(FRAME_SIZE, F_S, MAX_NUM_MELODIES);
 //NoteDetector noteDetector(FRAME_SIZE);
-Filter filter(F_S, FRAME_SIZE, 2, 16.0, 8.0);
+Filter filter(F_S, FRAME_SIZE, 2, 4.0, 8.0);
 EnvelopeGenerator envGenerator(FRAME_SIZE);
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
