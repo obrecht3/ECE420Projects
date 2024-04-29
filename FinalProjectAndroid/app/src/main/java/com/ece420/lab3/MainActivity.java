@@ -75,8 +75,9 @@ public class MainActivity extends Activity
     TextView envelope_TextView;
     SeekBar envelopeSeekBar;
     Spinner melodySelector;
-    Switch recordModeSwitch;
     Button recordButton;
+    Button recordPlaybackButton;
+    Switch recordModeSwitch;
 
     final int NumMelodies = 3;
     ArrayList<String> melodyStrings = new ArrayList<String>(NumMelodies);
@@ -219,6 +220,8 @@ public class MainActivity extends Activity
                     recordButton.setText("Stop");
                     recordButton.setBackgroundColor(Color.RED);
                     recordButton.setTextColor(Color.WHITE);
+                    if (!isPlaying)
+                        startEcho();
                     startRecord();
                 } else {
                     recordButton.setText("Record");
@@ -230,18 +233,46 @@ public class MainActivity extends Activity
         });
         recordButton.callOnClick();
 
+        recordPlaybackButton = (Button) findViewById(R.id.recordPlaybackButton);
+        recordPlaybackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recordPlaybackButton.getText() != "Play") {
+                    recordPlaybackButton.setText("Play");
+                    stopRecord();
+                } else {
+                    recordPlaybackButton.setText("Stop");
+                    playRecording();
+                }
+            }
+        });
+        recordPlaybackButton.callOnClick();
+
         recordModeSwitch = (Switch) findViewById(R.id.recordModeSwitch);
         recordModeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                setRecordMode(isChecked);
                 if (isChecked) {
                     recordButton.setVisibility(View.VISIBLE);
+                    recordPlaybackButton.setVisibility(View.VISIBLE);
+                    controlButton.setVisibility(View.INVISIBLE);
+
                     recordButton.setText("");
                     recordButton.callOnClick();
 
+                    recordPlaybackButton.setText("");
+                    recordPlaybackButton.callOnClick();
+
+                    if (!isPlaying)
+                        startEcho();
                 } else {
                     recordButton.setVisibility(View.INVISIBLE);
+                    recordPlaybackButton.setVisibility(View.INVISIBLE);
+                    controlButton.setVisibility(View.VISIBLE);
                     stopRecord();
+                    if (isPlaying)
+                        startEcho();
                 }
             }
         });
@@ -442,4 +473,5 @@ public class MainActivity extends Activity
     public static native void startRecord();
     public static native void stopRecord();
 
+    public static native void playRecording();
 }

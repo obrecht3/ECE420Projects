@@ -83,10 +83,24 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
         data[i] = value;
     }
 
-    if (recordMode && recorder.isRecording()) {
-        recorder.writeData(data);
+    if (recordMode) {
+        if (recorder.isRecording()) {
+            recorder.writeData(data);
+        } else {
+            if (recorder.isPlaying()) {
+                //        synthesize(recorder.getNextBuffer(), data);
+                float* recordedBuffer = recorder.getNextBuffer();
+                for (int i = 0; i < FRAME_SIZE; i++) {
+                    data[i] = recordedBuffer[i];
+                }
+            } else {
+                for (int i = 0; i < FRAME_SIZE; i++) {
+                    data[i] = 0.0f;
+                }
+            }
+        }
     } else {
-        synthesize(recorder.getNextBuffer(), data);
+        synthesize(data, data);
     }
 
     for (int i = 0; i < FRAME_SIZE; i++) {
@@ -139,4 +153,9 @@ JNIEXPORT void JNICALL
 Java_com_ece420_lab3_MainActivity_setRecordMode(JNIEnv *env, jclass clazz,
                                                 jboolean record_mode_on) {
     recordMode = record_mode_on;
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_playRecording(JNIEnv *env, jclass clazz) {
+    recorder.play();
 }
