@@ -16,7 +16,7 @@ public:
     // should execute writeInputSamples THEN detectBufferPeriod THEN processBlock to compute full TD-PSOLA
     void writeInputSamples(float *data);
     int detectBufferPeriod(); // this is separate to eventually cut down on computation for multiple melodies
-    void processBlock(float *data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen);
+    void processBlock(std::vector<std::vector<float>>& data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen);
 
 private:
     void pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int melodyIdx);
@@ -27,7 +27,7 @@ private:
     int bufferSize;
     int frameSize;
     int sampleRate;
-    int newEpochIdx;
+    std::vector<int> newEpochIdx;
 
     PitchEventHandler eventHandler;
 

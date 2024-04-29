@@ -51,11 +51,7 @@ const float* EnvelopeGenerator::getNextBlock(std::vector<PitchEvent> pitchEvents
     for (int i = 0; i < blockSize; ++i) {
         if (eventHandler.setCurrPitchEvent(i, pitchEvents)) {
             currEvent = eventHandler.getCurrPitchEvent();
-            if (currEvent.frequency == 0.0) {
-                state = OFF;
-            } else {
-                startNote();
-            }
+            startNote();
         }
         envelope[i] = getNextSample();
     }

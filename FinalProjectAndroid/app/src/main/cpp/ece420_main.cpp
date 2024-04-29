@@ -41,15 +41,10 @@ kiss_fft_cfg kfftCfg = kiss_fft_alloc(FFT_SIZE, false, NULL,NULL);
 kiss_fft_cpx kfftIn[FFT_SIZE] = {};
 kiss_fft_cpx kfftOut[FFT_SIZE] = {};
 
-TextParser parser[MAX_NUM_MELODIES] = {
-    TextParser(FRAME_SIZE, F_S),
-    TextParser(FRAME_SIZE, F_S),
-    TextParser(FRAME_SIZE, F_S),
-};
+std::vector<TextParser> parser(MAX_NUM_MELODIES, TextParser(FRAME_SIZE, F_S));
 
 Tuner tuner(FRAME_SIZE, F_S, MAX_NUM_MELODIES);
-//NoteDetector noteDetector(FRAME_SIZE);
-Filter filter(F_S, FRAME_SIZE, 2, 4.0, 8.0);
+std::vector<Filter> filter(MAX_NUM_MELODIES, Filter(F_S, FRAME_SIZE, 2, 4.0, 8.0));
 EnvelopeGenerator envGenerator(FRAME_SIZE);
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
@@ -76,15 +71,23 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
         pitchEventsList.push_back(p.getPitchEventsForNextBuffer());
     }
 
-    tuner.processBlock(data, pitchEventsList, period);
+    std::vector<std::vector<float>> noteData(MAX_NUM_MELODIES, std::vector<float>(FRAME_SIZE, 0));
+    tuner.processBlock(noteData, pitchEventsList, period);
 
-//    envGenerator.setSamplesPerNote(parser.getSamplesPerNote());
-//    const float *envelope = envGenerator.getNextBlock(pitchEvents);
-//    filter.processBlock(data, envelope, pitchEvents);
-//
-//    for (int i = 0; i < FRAME_SIZE; i++) {
-//        data[i] *= envelope[i];
-//    }
+    envGenerator.setSamplesPerNote(parser[0].getSamplesPerNote());
+    const float *envelope = envGenerator.getNextBlock(pitchEventsList[0]);
+
+    for (int melodyIdx = 0; melodyIdx < noteData.size(); melodyIdx++) {
+        filter[melodyIdx].processBlock(data, envelope, pitchEventsList[melodyIdx]);
+
+        for (int i = 0; i < FRAME_SIZE; i++) {
+            data[i] += noteData[melodyIdx][i];
+        }
+    }
+
+    for (int i = 0; i < FRAME_SIZE; i++) {
+        data[i] *= envelope[i];
+    }
 
     for (int i = 0; i < FRAME_SIZE; i++) {
         const int16_t value = data[i];

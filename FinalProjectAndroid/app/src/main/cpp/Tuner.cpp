@@ -10,7 +10,7 @@ Tuner::Tuner(int _frameSize, int _sampleRate, int maxNumMelodies)
     : bufferSize{3 * _frameSize}
     , frameSize{_frameSize}
     , sampleRate{_sampleRate}
-    , newEpochIdx{frameSize}
+    , newEpochIdx(maxNumMelodies, frameSize)
     , bufferIn(bufferSize, 0.0f)
     , highpass(sampleRate) {
     bufferOut.reserve(maxNumMelodies);
@@ -104,7 +104,7 @@ int Tuner::detectBufferPeriod() {
     return periodLen;
 }
 
-void Tuner::processBlock(float *data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen) {
+void Tuner::processBlock(std::vector<std::vector<float>>& data, std::vector<std::vector<PitchEvent>> pitchEventsList, int periodLen) {
     // The whole kit and kaboodle -- pitch shift
     const float fundamentalFreq = static_cast<float>(sampleRate) / static_cast<float>(periodLen);
     highpass.setG(highpass.calcG(fundamentalFreq));
@@ -118,10 +118,9 @@ void Tuner::processBlock(float *data, std::vector<std::vector<PitchEvent>> pitch
     }
 
     if (periodLen > 0) {
-        for (int i = 0; i < frameSize; i++) {
-            data[i] = bufferOut[0][i];
-            for (int melodyIdx = 1; melodyIdx < numMelodies; ++melodyIdx) {
-                data[i] += bufferOut[melodyIdx][i];
+        for (int melodyIdx = 0; melodyIdx < numMelodies; ++melodyIdx) {
+            for (int i = 0; i < frameSize; i++) {
+                data[melodyIdx][i] = bufferOut[melodyIdx][i];
             }
         }
     }
@@ -157,8 +156,8 @@ void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int m
             P1 = static_cast<int>(static_cast<float>(sampleRate) / currPitchEvent.frequency);
         }
 
-        while (newEpochIdx < 2 * frameSize) {
-            if (eventHandler.setCurrPitchEvent(newEpochIdx - frameSize, pitchEvents)) {
+        while (newEpochIdx[melodyIdx] < 2 * frameSize) {
+            if (eventHandler.setCurrPitchEvent(newEpochIdx[melodyIdx] - frameSize, pitchEvents)) {
                 currPitchEvent = eventHandler.getCurrPitchEvent();
                 if (currPitchEvent.frequency > 0) {
                     P1 = static_cast<int>(static_cast<float>(sampleRate) /
@@ -168,7 +167,7 @@ void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int m
 
             if (currPitchEvent.frequency > 0) {
                 // Find the closest epoch in the original signal
-                closestIdx = findClosestInVector(epochLocations, newEpochIdx, closestIdx - 1,
+                closestIdx = findClosestInVector(epochLocations, newEpochIdx[melodyIdx], closestIdx - 1,
                                                  epochLocations.size() - 2);
 
                 // apply Hanning window
@@ -185,10 +184,10 @@ void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int m
                 }
 
                 // overlap
-                overlapAddArray(bufferOut[melodyIdx].data(), hWindowed, newEpochIdx - P0, l);
-                newEpochIdx += P1;
+                overlapAddArray(bufferOut[melodyIdx].data(), hWindowed, newEpochIdx[melodyIdx] - P0, l);
+                newEpochIdx[melodyIdx] += P1;
             } else {
-                newEpochIdx++;
+                newEpochIdx[melodyIdx]++;
             }
         }
         // ************************ END YOUR CODE HERE  ***************************** //
@@ -196,9 +195,9 @@ void Tuner::pitchShift(std::vector<PitchEvent> pitchEvents, int periodLen, int m
 
     // Final bookkeeping, move your new pointer back, because you'll be
     // shifting everything back now in your circular buffer
-    newEpochIdx -= frameSize;
-    if (newEpochIdx < frameSize) {
-        newEpochIdx = frameSize;
+    newEpochIdx[melodyIdx] -= frameSize;
+    if (newEpochIdx[melodyIdx] < frameSize) {
+        newEpochIdx[melodyIdx] = frameSize;
     }
 }
 
