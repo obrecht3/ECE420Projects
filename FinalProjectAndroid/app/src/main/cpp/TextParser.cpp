@@ -70,7 +70,7 @@ void TextParser::parse(std::string input) {
 void TextParser::calcPitchEvents(float userFreq) {
     if (bufferOffset >= bufferSize) return;
 
-    const int n = getNearestNote(userFreq);
+    const int n = getNearestNote(userFreq) % 12;
     prevUserFreq = userFreq;
 
     if (!events.empty()) {
