@@ -37,18 +37,7 @@ void Recorder::stop() {
 
     if (recording) {
         recording = false;
-
-        size_t startSample = findStartSample();
-        size_t endSample = findEndSample();
-
-        if (endSample - startSample > 0) {
-            for (size_t i = startSample; i < endSample; ++i) {
-                signal[i - startSample] = signal[i];
-            }
-
-            signal.resize(endSample - startSample);
-            applyFades();
-        }
+        applyFades();
     }
 }
 
@@ -77,7 +66,7 @@ float *Recorder::getNextBuffer() {
         nextBuffer[i] = signal[pos];
         ++pos;
         if (pos >= signal.size()) {
-            pos = 0;
+            pos -= signal.size();
         }
     }
     return nextBuffer.data();

@@ -30,7 +30,6 @@ public:
     }
 
     bool melodyDone();
-
     double getSamplesPerNote();
 
 private:
