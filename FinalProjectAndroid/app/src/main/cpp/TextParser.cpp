@@ -1,7 +1,3 @@
-//
-// Created by joels on 4/14/2024.
-//
-
 #include "TextParser.h"
 
 TextParser::TextParser(int _bufferSize, int _sampleRate)
@@ -68,7 +64,7 @@ void TextParser::parse(std::string input) {
 }
 
 void TextParser::calcPitchEvents(float userFreq) {
-    if (bufferOffset >= bufferSize) return;
+    if (bufferOffset >= bufferSize || userFreq == 0) return;
 
     const int n = getNearestNote(userFreq) % 12;
     prevUserFreq = userFreq;

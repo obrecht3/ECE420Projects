@@ -16,7 +16,8 @@ add_library(echo SHARED
             NoteDetector.cpp
             Filter.cpp
             PitchEventHandler.cpp
-            EnvelopeGenerator.cpp)
+            EnvelopeGenerator.cpp
+            Recorder.cpp)
 
 # include libraries needed for hello-jni lib
 target_link_libraries(echo

@@ -40,12 +40,14 @@ import android.support.v4.app.ActivityCompat;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -85,6 +87,15 @@ public class MainActivity extends Activity
 
 
     int randomMelodyNumNotes = 8;
+    Spinner melodySelector;
+    Button recordButton;
+    Button recordPlaybackButton;
+    Switch recordModeSwitch;
+
+    final int NumMelodies = 3;
+    ArrayList<String> melodyStrings = new ArrayList<String>(NumMelodies);
+    int melodyIdx = 0;
+
     String  nativeSampleRate;
     String  nativeSampleBufSize;
     boolean supportRecording;
@@ -108,8 +119,6 @@ public class MainActivity extends Activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         super.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-
 
         // Google NDK Stuff
         controlButton = (Button)findViewById((R.id.capture_control_button));
@@ -242,10 +251,34 @@ public class MainActivity extends Activity
         ArrayAdapter<String> randomLengthAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, randomLengthItems);
         randomLength.setAdapter(randomLengthAdapter);
         randomLength.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+           @Override
+           public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+               final int NumBars = 1 << position; // 2 ^ position
+               randomMelodyNumNotes = NumBars * 8;
+           }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+       });
+
+        melodySelector = (Spinner) findViewById(R.id.melodySelector);
+        ArrayList<String> melodySelectorItems = new ArrayList<String>();
+        for (int i = 0; i < NumMelodies; ++i) {
+            melodySelectorItems.add("Melody " + Integer.toString(i + 1));
+        }
+        ArrayAdapter<String> melodySelectorAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, melodySelectorItems);
+            melodySelector.setAdapter(melodySelectorAdapter);
+        melodySelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                final int NumBars = 1 << position; // 2 ^ position
-                randomMelodyNumNotes = NumBars * 8;
+                melodyIdx = position;
+
+                for (int i = melodyStrings.size(); i < NumMelodies; ++i) {
+                    melodyStrings.add("");
+                }
+                notesInput.setText(melodyStrings.get(melodyIdx));
             }
 
             @Override
@@ -269,6 +302,71 @@ public class MainActivity extends Activity
             }
         });
 
+        recordButton = (Button) findViewById(R.id.recordButton);
+        recordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recordButton.getText() == "Record") {
+                    recordButton.setText("Stop");
+                    recordButton.setBackgroundColor(Color.RED);
+                    recordButton.setTextColor(Color.WHITE);
+                    if (!isPlaying)
+                        startEcho();
+                    startRecord();
+                } else {
+                    recordButton.setText("Record");
+                    recordButton.setBackgroundColor(Color.GREEN);
+                    recordButton.setTextColor(Color.BLACK);
+                    stopRecord();
+                }
+            }
+        });
+        recordButton.callOnClick();
+
+        recordPlaybackButton = (Button) findViewById(R.id.recordPlaybackButton);
+        recordPlaybackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recordPlaybackButton.getText() != "Play") {
+                    recordPlaybackButton.setText("Play");
+                    stopRecord();
+                } else {
+                    recordPlaybackButton.setText("Stop");
+                    playRecording();
+                }
+            }
+        });
+        recordPlaybackButton.callOnClick();
+
+        recordModeSwitch = (Switch) findViewById(R.id.recordModeSwitch);
+        recordModeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                setRecordMode(isChecked);
+                if (isChecked) {
+                    recordButton.setVisibility(View.VISIBLE);
+                    recordPlaybackButton.setVisibility(View.VISIBLE);
+                    controlButton.setVisibility(View.INVISIBLE);
+
+                    recordButton.setText("");
+                    recordButton.callOnClick();
+
+                    recordPlaybackButton.setText("");
+                    recordPlaybackButton.callOnClick();
+
+                    if (!isPlaying)
+                        startEcho();
+                } else {
+                    recordButton.setVisibility(View.INVISIBLE);
+                    recordPlaybackButton.setVisibility(View.INVISIBLE);
+                    controlButton.setVisibility(View.VISIBLE);
+                    stopRecord();
+                    if (isPlaying)
+                        startEcho();
+                }
+            }
+        });
+        recordModeSwitch.setChecked(true);
 
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -327,8 +425,14 @@ public class MainActivity extends Activity
             }
         }
 
-        notesInputRepeated.setText("Submitted!");
-        getNotesInput(sequence);
+        melodyStrings.set(melodyIdx, sequence);
+
+        String newText = "";
+        for (int i = 0; i < melodyStrings.size(); ++i) {
+            newText += melodySelector.getItemAtPosition(i).toString() + ": " + melodyStrings.get(i) + "\n";
+        }
+        notesInputRepeated.setText(newText);
+        getNotesInput(sequence, melodyIdx);
     }
 
     private void startEcho() {
@@ -451,10 +555,15 @@ public class MainActivity extends Activity
     public static native void deleteAudioRecorder();
     public static native void startPlay();
     public static native void stopPlay();
-    public static native void getNotesInput(String input);
+    public static native void getNotesInput(String input, int melodyIdx);
     public static native void writeNewTempo(int tempo);
     public static native void writeNewEnvelopePeakPosition(float position);
     public static native void setFilterCutoff(float cutoff);
     public static native void setFilterQ(float Q);
 
+    public static native void setRecordMode(boolean recordModeOn);
+    public static native void startRecord();
+    public static native void stopRecord();
+
+    public static native void playRecording();
 }

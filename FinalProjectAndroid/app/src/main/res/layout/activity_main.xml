@@ -23,16 +23,16 @@
 
     <EditText
         android:id="@+id/notesInput"
-        android:layout_width="wrap_content"
+        android:layout_width="191dp"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text" />
 
     <TextView
         android:id="@+id/notesInputRepeated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/notesInput"  />
+        android:layout_width="395dp"
+        android:layout_height="82dp"
+        android:layout_below="@id/melodySelector" />
 
     <Button
         android:id="@+id/submitButton"
@@ -138,6 +138,41 @@
         android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <Spinner
+        android:id="@+id/melodySelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/notesInput"
+        android:layout_marginTop="3dp" />
+
+    <Switch
+        android:id="@+id/recordModeSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/notesInputRepeated"
+        android:layout_marginTop="15dp"
+        android:text="Record Mode" />
+
+    <Button
+        android:id="@+id/recordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/notesInputRepeated"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:text="" />
+
+    <Button
+        android:id="@+id/recordPlaybackButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/notesInputRepeated"
+        android:layout_toRightOf="@+id/recordButton"
+        android:layout_marginTop="5dp"
+        android:text="" />
 
 </RelativeLayout>
 
