@@ -87,7 +87,6 @@ public class MainActivity extends Activity
 
 
     int randomMelodyNumNotes = 8;
-    Spinner melodySelector;
     Button recordButton;
     Button recordPlaybackButton;
     Switch recordModeSwitch;
@@ -261,30 +260,6 @@ public class MainActivity extends Activity
             public void onNothingSelected(AdapterView<?> adapterView) {
 
             }
-       });
-
-        melodySelector = (Spinner) findViewById(R.id.melodySelector);
-        ArrayList<String> melodySelectorItems = new ArrayList<String>();
-        for (int i = 0; i < NumMelodies; ++i) {
-            melodySelectorItems.add("Melody " + Integer.toString(i + 1));
-        }
-        ArrayAdapter<String> melodySelectorAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, melodySelectorItems);
-            melodySelector.setAdapter(melodySelectorAdapter);
-        melodySelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                melodyIdx = position;
-
-                for (int i = melodyStrings.size(); i < NumMelodies; ++i) {
-                    melodyStrings.add("");
-                }
-                notesInput.setText(melodyStrings.get(melodyIdx));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
         });
 
         randomButton = (Button) findViewById(R.id.randomButton);
@@ -292,7 +267,7 @@ public class MainActivity extends Activity
             Random random = new Random();
             @Override
             public void onClick(View view) {
-                String possibleChars = "12345678xxxx";
+                String possibleChars = "12345678xx";
                 String randomMelody = "";
                 for (int i = 0; i < randomMelodyNumNotes; ++i) {
                     final int idx = random.nextInt(possibleChars.length());
@@ -346,7 +321,6 @@ public class MainActivity extends Activity
                 if (isChecked) {
                     recordButton.setVisibility(View.VISIBLE);
                     recordPlaybackButton.setVisibility(View.VISIBLE);
-                    controlButton.setVisibility(View.INVISIBLE);
 
                     recordButton.setText("");
                     recordButton.callOnClick();
@@ -359,7 +333,6 @@ public class MainActivity extends Activity
                 } else {
                     recordButton.setVisibility(View.INVISIBLE);
                     recordPlaybackButton.setVisibility(View.INVISIBLE);
-                    controlButton.setVisibility(View.VISIBLE);
                     stopRecord();
                     if (isPlaying)
                         startEcho();
@@ -424,15 +397,8 @@ public class MainActivity extends Activity
                 return;
             }
         }
-
-        melodyStrings.set(melodyIdx, sequence);
-
-        String newText = "";
-        for (int i = 0; i < melodyStrings.size(); ++i) {
-            newText += melodySelector.getItemAtPosition(i).toString() + ": " + melodyStrings.get(i) + "\n";
-        }
-        notesInputRepeated.setText(newText);
-        getNotesInput(sequence, melodyIdx);
+        notesInputRepeated.setText("Submitted!");
+        getNotesInput(sequence);
     }
 
     private void startEcho() {
@@ -555,7 +521,7 @@ public class MainActivity extends Activity
     public static native void deleteAudioRecorder();
     public static native void startPlay();
     public static native void stopPlay();
-    public static native void getNotesInput(String input, int melodyIdx);
+    public static native void getNotesInput(String input);
     public static native void writeNewTempo(int tempo);
     public static native void writeNewEnvelopePeakPosition(float position);
     public static native void setFilterCutoff(float cutoff);

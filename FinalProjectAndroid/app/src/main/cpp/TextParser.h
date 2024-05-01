@@ -32,6 +32,11 @@ public:
     bool melodyDone();
     double getSamplesPerNote();
 
+    void setN(float userFreq) {
+        if (userFreq == 0) return;
+        n = getNearestNote(userFreq) % 12;;
+    }
+
 private:
     int getNearestNote(float freq) const;
 
@@ -44,6 +49,8 @@ private:
     double samplesPerNote;
 
     unsigned long bufferOffset;
+
+    int n;
 
     std::vector<Pitch> pitches;
     std::vector<PitchEvent> events;

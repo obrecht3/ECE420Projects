@@ -5,7 +5,8 @@ TextParser::TextParser(int _bufferSize, int _sampleRate)
     , sampleRate{_sampleRate}
     , prevUserFreq{0.0f}
     , samplesPerNote{0.0}
-    , bufferOffset{0ul} {}
+    , bufferOffset{0ul}
+    , n{0} {}
 
 TextParser::~TextParser() {
     pitches.clear();
@@ -66,7 +67,7 @@ void TextParser::parse(std::string input) {
 void TextParser::calcPitchEvents(float userFreq) {
     if (bufferOffset >= bufferSize || userFreq == 0) return;
 
-    const int n = getNearestNote(userFreq) % 12;
+    setN(userFreq);
     prevUserFreq = userFreq;
 
     if (!events.empty()) {

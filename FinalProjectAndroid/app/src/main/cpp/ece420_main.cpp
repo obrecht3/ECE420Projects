@@ -21,7 +21,7 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint);
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input, jint melodyIdx);
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input);
 }
 
 // Student Variables
@@ -48,7 +48,7 @@ void synthesize(const float* inputData, float *outputData) {
     const float userFreq = static_cast<float>(F_S) / static_cast<float>(period);
 
     parser.calcPitchEvents(userFreq);
-    parser.getPitchEventsForNextBuffer();
+    pitchEventsList = {parser.getPitchEventsForNextBuffer()};
 
     tuner.processBlock(noteData, pitchEventsList, period);
 
@@ -80,9 +80,9 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
                 data[i] = value;
             }
             recorder.writeData(data);
-            for (int i = 0; i < FRAME_SIZE; i++) {
-                data[i] = 0.0f;
-            }
+//            for (int i = 0; i < FRAME_SIZE; i++) {
+//                data[i] = 0.0f;
+//            }
         } else {
             if (recorder.isPlaying()) {
                 synthesize(recorder.getNextBuffer(), data);
@@ -124,7 +124,7 @@ Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jcla
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input, jint melodyIdx) {
+Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstring input) {
     const char *cstr = env->GetStringUTFChars(input, NULL);
     std::string str = std::string(cstr);
     env->ReleaseStringUTFChars(input, cstr);
