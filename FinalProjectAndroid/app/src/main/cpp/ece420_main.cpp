@@ -96,8 +96,8 @@ Java_com_ece420_lab3_MainActivity_writeNewTempo(JNIEnv *env, jclass, jint newTem
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jint newEnvelopePeakPosition) {
-    envGenerator.setShape(static_cast<float>(newEnvelopePeakPosition) / 100.0f, parser.getSamplesPerNote());
+Java_com_ece420_lab3_MainActivity_writeNewEnvelopePeakPosition(JNIEnv *env, jclass, jfloat newEnvelopePeakPosition) {
+    envGenerator.setShape(newEnvelopePeakPosition, parser.getSamplesPerNote());
 }
 
 extern "C"
@@ -107,4 +107,14 @@ Java_com_ece420_lab3_MainActivity_getNotesInput(JNIEnv *env, jclass clazz, jstri
     std::string str = std::string(cstr);
     env->ReleaseStringUTFChars(input, cstr);
     parser.parse(str);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_setFilterCutoff(JNIEnv *env, jclass clazz, jfloat cutoff) {
+    filter.setMaxFrequencyInOctaves(cutoff);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_ece420_lab3_MainActivity_setFilterQ(JNIEnv *env, jclass clazz, jfloat q) {
+    filter.setRes(q);
 }

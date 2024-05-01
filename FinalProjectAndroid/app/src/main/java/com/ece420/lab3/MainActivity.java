@@ -16,6 +16,9 @@
 
 package com.ece420.lab3;
 
+import static java.lang.Math.random;
+import static java.lang.Math.round;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -40,8 +43,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -51,6 +57,8 @@ import android.widget.Toast;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.IntStream;
@@ -64,13 +72,19 @@ public class MainActivity extends Activity
     TextView notesInputRepeated;
     EditText notesInput;
     Button submitButton;
-    SeekBar frequencySeekBar;
+    SeekBar tempoSeekBar;
     TextView tempo_TextView;
     TextView envelope_TextView;
     SeekBar envelopeSeekBar;
+    TextView cutoff_TextView;
+    SeekBar cutoffSeekBar;
+    TextView Q_TextView;
+    SeekBar QSeekBar;
+    Spinner randomLength;
+    Button randomButton;
 
 
-
+    int randomMelodyNumNotes = 8;
     String  nativeSampleRate;
     String  nativeSampleBufSize;
     boolean supportRecording;
@@ -139,9 +153,9 @@ public class MainActivity extends Activity
         tempo_TextView = (TextView) findViewById(R.id.tempo_TextView);
         tempo_TextView.setText("Tempo: ");
 
-        // set up frequencySeekBar
-        frequencySeekBar = (SeekBar) findViewById(R.id.frequencySeekBar);
-        frequencySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        // set up tempoSeekBar
+        tempoSeekBar = (SeekBar) findViewById(R.id.tempoSeekBar);
+        tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 int newTempo = (int)(40.0f + 2.405f * (float)i);        // BPM From 40 to 280
@@ -155,19 +169,17 @@ public class MainActivity extends Activity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-        frequencySeekBar.setProgress(10);
+        tempoSeekBar.setProgress(10);
 
         //set up envelope_TextView
         envelope_TextView = (TextView) findViewById(R.id.envelope_TextView);
-        envelope_TextView.setText("Attack-Decay Envelope Peak");
 
         //set upt envelopeSeekBar
         envelopeSeekBar = (SeekBar) findViewById(R.id.envelopeSeekBar);
         envelopeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                final int envelopePeakPosition = i;
-                writeNewEnvelopePeakPosition(envelopePeakPosition);
+                writeNewEnvelopePeakPosition((float)i / 100.0f);
             }
 
             @Override
@@ -178,6 +190,86 @@ public class MainActivity extends Activity
         });
         envelopeSeekBar.setProgress(10);
 
+        cutoff_TextView = (TextView) findViewById(R.id.cutoff_TextView);
+        cutoffSeekBar = (SeekBar) findViewById(R.id.cutoffSeekbar);
+        cutoffSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                final float MaxOctaves = 8.0f;
+                final float Octave = ((float)i / 100.0f) * MaxOctaves;
+                cutoff_TextView.setText("Filter Cutoff (Octaves): " + Float.toString(Octave));
+                setFilterCutoff(Octave);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        cutoffSeekBar.setProgress(25);
+
+        Q_TextView = (TextView) findViewById(R.id.Q_TextView);
+        QSeekBar = (SeekBar) findViewById(R.id.QSeekBar);
+        QSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                final float MaxQ = 8.0f;
+                final float CenterQ = 1.0f; // center of seek bar should be this value
+                final float MinQ = 0.1f;
+
+                final float Q = (i >= 50) ? ((float)(i - 50) / 50.0f) * (MaxQ - CenterQ) + CenterQ : ((float)i / 50.0f) * (CenterQ - MinQ) + MinQ;
+                Q_TextView.setText("Filter Resonance: " + Float.toString(round(Q * 100.0f) / 100.0f));
+                setFilterQ(Q);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        QSeekBar.setProgress(50);
+
+        randomLength = (Spinner) findViewById(R.id.randomLength);
+        ArrayList<String> randomLengthItems = new ArrayList<String>();
+        randomLengthItems.add("1 Bar");
+        randomLengthItems.add("2 Bars");
+        randomLengthItems.add("4 Bars");
+
+        ArrayAdapter<String> randomLengthAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, randomLengthItems);
+        randomLength.setAdapter(randomLengthAdapter);
+        randomLength.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                final int NumBars = 1 << position; // 2 ^ position
+                randomMelodyNumNotes = NumBars * 8;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        randomButton = (Button) findViewById(R.id.randomButton);
+        randomButton.setOnClickListener(new View.OnClickListener() {
+            Random random = new Random();
+            @Override
+            public void onClick(View view) {
+                String possibleChars = "12345678xxxx";
+                String randomMelody = "";
+                for (int i = 0; i < randomMelodyNumNotes; ++i) {
+                    final int idx = random.nextInt(possibleChars.length());
+                    randomMelody += possibleChars.charAt(idx);
+                }
+                notesInput.setText(randomMelody);
+            }
+        });
+
+
         // Copied from OnClick handler
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -187,8 +279,7 @@ public class MainActivity extends Activity
                     AUDIO_ECHO_REQUEST);
             return;
         }
-        startEcho();
-
+//        startEcho();
     }
     @Override
     protected void onDestroy() {
@@ -362,6 +453,8 @@ public class MainActivity extends Activity
     public static native void stopPlay();
     public static native void getNotesInput(String input);
     public static native void writeNewTempo(int tempo);
-    public static native void writeNewEnvelopePeakPosition(int position);
+    public static native void writeNewEnvelopePeakPosition(float position);
+    public static native void setFilterCutoff(float cutoff);
+    public static native void setFilterQ(float Q);
 
 }
