@@ -18,9 +18,6 @@ public:
     float* getNextBuffer();
 
 private:
-    size_t findStartSample();
-    size_t findEndSample();
-
     void applyFades();
 
 private:

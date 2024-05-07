@@ -72,54 +72,6 @@ float *Recorder::getNextBuffer() {
     return nextBuffer.data();
 }
 
-size_t Recorder::findStartSample() {
-    Tuner periodDetector(frameSize, sampleRate, 0);
-
-    const size_t numFrames = signal.size() / frameSize;
-    float data[frameSize];
-    size_t signalPos = 0;
-
-    for (size_t frame = 0; frame < numFrames; ++frame) {
-        for (size_t i = 0; i < frameSize; ++i) {
-            data[i] = signal[signalPos];
-            signalPos++;
-        }
-
-        periodDetector.writeInputSamples(data);
-        int period = periodDetector.detectBufferPeriod();
-
-        if (period > 50) {
-            return frame * frameSize;
-        }
-    }
-
-    return 0;
-}
-
-size_t Recorder::findEndSample() {
-    Tuner periodDetector(frameSize, sampleRate, 0);
-
-    const size_t numFrames = signal.size() / frameSize;
-    float data[frameSize];
-    size_t signalPos = frameSize * numFrames;
-
-    for (int frame = numFrames - 1; frame >= 0; --frame) {
-        for (size_t i = 0; i < frameSize; ++i) {
-            data[i] = signal[signalPos];
-            signalPos--;
-        }
-
-        periodDetector.writeInputSamples(data);
-        int period = periodDetector.detectBufferPeriod();
-
-        if (period > 50) {
-            return frame * frameSize;
-        }
-    }
-
-    return 0;
-}
-
 void Recorder::applyFades() {
     for (size_t i = 0; i < fadeLength; ++i) {
         signal[pos] *= static_cast<float>(pos) / static_cast<float>(fadeLength);

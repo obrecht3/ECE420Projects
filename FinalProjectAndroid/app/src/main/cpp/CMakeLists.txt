@@ -13,7 +13,6 @@ add_library(echo SHARED
             ece420_main.cpp
             TextParser.cpp
             Tuner.cpp
-            NoteDetector.cpp
             Filter.cpp
             PitchEventHandler.cpp
             EnvelopeGenerator.cpp

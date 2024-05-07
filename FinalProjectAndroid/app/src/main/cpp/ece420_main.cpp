@@ -9,7 +9,6 @@
 #include "kiss_fft/kiss_fft.h"
 #include "TextParser.h"
 #include "Tuner.h"
-#include "NoteDetector.h"
 #include "Filter.h"
 #include "EnvelopeGenerator.h"
 #include "Recorder.h"
@@ -38,7 +37,6 @@ Filter filter(F_S, FRAME_SIZE, 2, 4.0, 8.0);
 EnvelopeGenerator envGenerator(FRAME_SIZE);
 Recorder recorder(F_S, FRAME_SIZE, 8.0);
 
-// return false if not able to synthesize this buffer (only useful for record mode)
 void synthesize(const float* inputData, float *outputData) {
     std::vector<std::vector<PitchEvent>> pitchEventsList;
     std::vector<std::vector<float>> noteData(1, std::vector<float>(FRAME_SIZE, 0));
@@ -73,6 +71,7 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
         const int16_t value = ((uint16_t) dataBuf->buf_[2 * i]) | (((uint16_t) dataBuf->buf_[2 * i + 1]) << 8);
         data[i] = value;
     }
+
     if (recordMode) {
         if (recorder.isRecording()) {
             for (int i = 0; i < FRAME_SIZE; i++) {
@@ -80,9 +79,6 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
                 data[i] = value;
             }
             recorder.writeData(data);
-//            for (int i = 0; i < FRAME_SIZE; i++) {
-//                data[i] = 0.0f;
-//            }
         } else {
             if (recorder.isPlaying()) {
                 synthesize(recorder.getNextBuffer(), data);

@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    double FrequencyCurve(double x, double freq) { return freq * pow(maxFreqExponentBase, x); }
+    double FrequencyCurve(double x, double freq) const { return freq * pow(maxFreqExponentBase, x); }
 private:
     double sampleRate;
     int bufferSize;
