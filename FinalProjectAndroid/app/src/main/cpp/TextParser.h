@@ -32,11 +32,6 @@ public:
     bool melodyDone();
     double getSamplesPerNote();
 
-    void setN(float userFreq) {
-        if (userFreq == 0) return;
-        n = getNearestNote(userFreq) % 12;;
-    }
-
 private:
     int getNearestNote(float freq) const;
 
